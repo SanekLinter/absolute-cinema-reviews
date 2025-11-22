@@ -29,11 +29,7 @@ def register_user(user_in: schemas.UserCreate, db: Session = Depends(database.ge
     db.refresh(new_user)
 
     access_token = create_access_token(
-        data={
-            "sub": str(new_user.id),
-            "username": new_user.username,
-            "role": new_user.role
-        }
+        data={"sub": str(new_user.id)}
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -47,11 +43,7 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         )
 
     access_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "username": user.username,
-            "role": user.role
-        }
+        data={"sub": str(user.id)}
     )
     return {"access_token": access_token, "token_type": "bearer"}
 

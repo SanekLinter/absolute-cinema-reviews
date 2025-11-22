@@ -29,8 +29,6 @@ def get_current_user(
     try:
         payload = jwt.decode(token, config.settings.SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = int(payload["sub"])
-        username: str = payload["username"]
-        role: str = payload["role"]
     except JWTError:
         raise credentials_exception
 
