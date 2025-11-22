@@ -6,14 +6,14 @@ import models, schemas, database
 from utils import hash_password, verify_password
 from dependencies import create_access_token, get_current_user
 
-router = APIRouter()
+router = APIRouter(tags=["auth"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
     existing_user = db.query(models.User).filter(models.User.username == user_in.username).first()
     if existing_user:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already exists"
         )
 
@@ -42,7 +42,7 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
 
