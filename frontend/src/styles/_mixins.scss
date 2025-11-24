@@ -1,0 +1,13 @@
+@use 'sass:math';
+@use './_vars.scss' as *;
+
+@mixin link($color: $black, $hoverColor: $brown) {
+  color: $color;
+  transition: color 0.3s ease;
+
+  &:hover,
+  &:active {
+    transition: none;
+    text-decoration: underline;
+  }
+}

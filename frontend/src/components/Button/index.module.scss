@@ -1,0 +1,64 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/vars' as *;
+
+.button {
+  padding: 8px 15px;
+  margin-top: 0;
+  color: $black;
+  background-color: $orange;
+  border: 1px solid $black;
+  font-weight: bold;
+  border-radius: $borderRadiusSmall;
+  cursor: pointer;
+  user-select: none;
+  font-size: 16px;
+  text-decoration: none; // важно для Link
+  display: inline-block; // важно для Link
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 2px 2px 1px $black;
+
+  &.orange {
+    background-color: $orange;
+    color: $my-white;
+
+    &:hover {
+      background-color: #e67e22;
+    }
+
+    &:active {
+      background-color: #f39c12;
+      box-shadow: none;
+      transform: translateY(2px) translateX(2px);
+    }
+
+    &.disabled {
+      pointer-events: none;
+      background-color: $light-grey;
+      color: #e0e0e0;
+    }
+  }
+
+  &.white {
+    background-color: $my-white;
+    color: $black;
+    border-color: $black;
+
+    &:hover {
+      background-color: #ddd8d8;
+    }
+
+    &:active {
+      background-color: #e0e0e0;
+      box-shadow: none;
+      transform: translateY(2px) translateX(2px);
+    }
+
+    &.disabled {
+      pointer-events: none;
+      background-color: $light-grey;
+      color: #e0e0e0;
+    }
+  }
+}
