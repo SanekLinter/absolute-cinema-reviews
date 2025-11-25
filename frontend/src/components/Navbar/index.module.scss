@@ -1,0 +1,56 @@
+@use '../../styles/_vars.scss' as *;
+@use '../../styles/_mixins.scss' as *;
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $orange;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  color: $black;
+  padding: 0px 30px;
+  height: 70px;
+
+  .logo {
+    height: 70px;
+    width: auto;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+
+    .menu {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+      align-items: center;
+      text-align: center;
+      font-weight: 400;
+
+      .link {
+        @include link;
+      }
+    }
+  }
+
+  .right {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+
+    .username {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      .logoUser {
+        height: 30px;
+        width: auto;
+      }
+    }
+  }
+}
