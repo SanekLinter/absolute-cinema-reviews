@@ -1,13 +1,23 @@
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import * as routes from './lib/routes';
+import { MainLayout } from './components/MainLayout';
+import { AllReviewsPage } from './pages/AllReviewsPage';
+import { SignInPage } from './pages/SignInPage';
+import { SignUpPage } from './pages/SignUpPage';
+import './styles/global.scss';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div>
-          <h1>Absolute Cinema Reviews</h1>
-        </div>
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route path={routes.getAllReviewsRoute()} element={<AllReviewsPage />} />
+            <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
+            <Route path={routes.getSignInRoute()} element={<SignInPage />} />
+          </Route>
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   );
