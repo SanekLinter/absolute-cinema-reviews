@@ -1,0 +1,37 @@
+@use '../../styles/vars' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .label {
+    font-size: 20;
+    font-weight: 500;
+    color: $my-white;
+  }
+
+  .input {
+    padding: 10px 14px;
+    border: 1px solid $grey;
+    background: $my-white;
+    border-radius: 6px;
+    color: $black;
+    font-size: 15px;
+    transition: border-color 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $orange;
+    }
+  }
+
+  .inputError {
+    border-color: $orange;
+  }
+
+  .error {
+    color: $orange;
+    font-size: 12px;
+  }
+}

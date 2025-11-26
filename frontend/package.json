@@ -12,15 +12,18 @@
     "format": "prettier --write . --cache"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "classnames": "^2.5.1",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
+    "react-hook-form": "^7.66.1",
     "react-router-dom": "^7.9.5",
     "reset-css": "^5.0.2",
-    "sass": "^1.94.0"
+    "sass": "^1.94.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
