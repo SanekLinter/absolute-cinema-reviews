@@ -1,0 +1,24 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/vars' as *;
+
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+
+  .form {
+    width: 100%;
+    max-width: 540px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+
+    .button {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
