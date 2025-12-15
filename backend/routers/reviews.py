@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import models, schemas, database
-from dependencies import get_current_user
+from dependencies import get_current_user, get_current_admin
 from math import ceil
 
 router = APIRouter(tags=["reviews"])
@@ -146,3 +146,55 @@ def get_my_reviews(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
 
+
+@router.get("/moderation", response_model=schemas.PaginatedReviewsResponse)
+def get_moderation_reviews(
+    current_user: models.User = Depends(get_current_admin),
+    params: schemas.PublicPaginationParams = Depends(),
+    db: Session = Depends(database.get_db),
+):
+    try:
+        page = params.page
+        limit = params.limit
+
+        query = db.query(models.Review).filter(models.Review.status == "pending")
+        
+        total_count = query.count()
+        
+        sort_column = models.Review.created_at
+        query = query.order_by(sort_column.desc())
+        
+        offset = (page - 1) * limit
+        reviews = query.offset(offset).limit(limit).all()
+        
+        review_responses = [
+            schemas.ReviewResponse(
+                id=review.id,
+                title=review.title,
+                movie_title=review.movie_title,
+                content=review.content,
+                status=review.status,
+                likes=review.likes,
+                created_at=review.created_at,
+                author=schemas.UserBase(
+                    id=review.author.id,
+                    username=review.author.username
+                )
+            )
+            for review in reviews
+        ]
+        
+        total_pages = ceil(total_count / limit) if total_count > 0 else 1
+        
+        return schemas.PaginatedReviewsResponse(
+            reviews=review_responses,
+            pagination=schemas.PaginationInfo(
+                current_page=page,
+                total_pages=total_pages,
+                total_items=total_count,
+                items_per_page=limit
+            )
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
