@@ -9,6 +9,20 @@
   flex-direction: column;
   gap: 30px;
 
+  .sortSelect {
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: $my-white;
+    color: $black;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 2px 2px 1px $black;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
   .pagination {
     display: flex;
     justify-content: center;

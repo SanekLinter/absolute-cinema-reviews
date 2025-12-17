@@ -6,14 +6,23 @@ import { getPublicReviews } from '../../api/reviews';
 import { Button } from '../../components/Button';
 import css from './index.module.scss';
 
+type SortOption = 'date_desc' | 'date_asc' | 'likes_desc';
+
+const SORT_MAP: Record<SortOption, { sort: 'created_at' | 'likes'; order: 'asc' | 'desc' }> = {
+  date_desc: { sort: 'created_at', order: 'desc' },
+  date_asc: { sort: 'created_at', order: 'asc' },
+  likes_desc: { sort: 'likes', order: 'desc' },
+};
+
 export const AllReviewsPage = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortOption, setSortOption] = useState<SortOption>('date_desc');
 
-  const loadReviews = async (page: number) => {
+  const loadReviews = async (page: number, sort: SortOption) => {
     setLoading(true);
     setError(null);
 
@@ -21,6 +30,7 @@ export const AllReviewsPage = () => {
       const data = await getPublicReviews({
         page,
         limit: 20,
+        ...SORT_MAP[sort],
       });
 
       setReviews(data.reviews);
@@ -33,11 +43,22 @@ export const AllReviewsPage = () => {
   };
 
   useEffect(() => {
-    loadReviews(page);
-  }, [page]);
+    loadReviews(page, sortOption);
+  }, [page, sortOption]);
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPage(1);
+    setSortOption(e.target.value as SortOption);
+  };
 
   return (
     <div className={css.page}>
+      <select value={sortOption} onChange={handleSortChange} className={css.sortSelect}>
+        <option value="date_desc">Сначала новые</option>
+        <option value="date_asc">Сначала старые</option>
+        <option value="likes_desc">Сначала популярные</option>
+      </select>
+
       {error ? <Alert>{error}</Alert> : <ReviewList reviews={reviews} />}
 
       {totalPages > 1 && (
