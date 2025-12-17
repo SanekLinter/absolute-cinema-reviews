@@ -13,3 +13,16 @@ export const getPublicReviews = async (
   const response = await api.get('/reviews/public', { params });
   return response.data;
 };
+
+export const getMyReviews = async (
+  params: {
+    page?: number;
+    limit?: number;
+    sort?: 'created_at' | 'likes';
+    order?: 'asc' | 'desc';
+    search?: string;
+  } = {}
+) => {
+  const response = await api.get('/reviews/my', { params });
+  return response.data;
+};

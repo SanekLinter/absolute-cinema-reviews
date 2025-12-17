@@ -5,6 +5,7 @@ import { MainLayout } from './components/MainLayout';
 import { AllReviewsPage } from './pages/AllReviewsPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { MyReviewsPage } from './pages/MyReviewsPage';
 import './styles/global.scss';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path={routes.getAllReviewsRoute()} element={<AllReviewsPage />} />
+            <Route path={routes.getMyReviewsRoute()} element={<MyReviewsPage />} />
             <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
             <Route path={routes.getSignInRoute()} element={<SignInPage />} />
           </Route>
