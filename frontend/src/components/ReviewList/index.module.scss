@@ -1,0 +1,14 @@
+@use '../../styles/vars' as *;
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: $orange;
+  font-weight: 500;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}

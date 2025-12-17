@@ -1,0 +1,71 @@
+@use '../../styles/vars' as *;
+
+.card {
+  background: $my-white;
+  border-radius: 5px;
+  padding: 15px 20px 10px;
+  transition: 0.1s ease;
+  box-shadow: 2px 2px 1px $black;
+
+  &:hover {
+    box-shadow: 0 0 10px $light-grey;
+  }
+
+  .title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: $black;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .meta {
+    margin-top: 4px;
+    display: flex;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: $black;
+    align-items: center;
+
+    .movie {
+      font-weight: 600;
+    }
+
+    .author {
+      color: $orange;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .date {
+      margin-left: auto;
+      color: $orange;
+      font-weight: 600;
+    }
+
+    .likes {
+      color: $black;
+    }
+
+    .status {
+      margin-left: auto;
+      color: $orange;
+      font-weight: 600;
+    }
+  }
+
+  .preview {
+    margin: 10px 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: $black;
+    text-align: justify;
+  }
+}

@@ -1,0 +1,24 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/vars' as *;
+
+.page {
+  width: 80%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    color: $my-white;
+
+    .pageInfo {
+      min-width: 120px;
+      text-align: center;
+    }
+  }
+}
