@@ -21,8 +21,10 @@ export const AllReviewsPage = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sortOption, setSortOption] = useState<SortOption>('date_desc');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const loadReviews = async (page: number, sort: SortOption) => {
+  const loadReviews = async (page: number, sort: SortOption, search: string) => {
     setLoading(true);
     setError(null);
 
@@ -31,6 +33,7 @@ export const AllReviewsPage = () => {
         page,
         limit: 20,
         ...SORT_MAP[sort],
+        search: search || undefined,
       });
 
       setReviews(data.reviews);
@@ -43,8 +46,8 @@ export const AllReviewsPage = () => {
   };
 
   useEffect(() => {
-    loadReviews(page, sortOption);
-  }, [page, sortOption]);
+    loadReviews(page, sortOption, searchQuery);
+  }, [page, sortOption, searchQuery]);
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPage(1);
@@ -53,12 +56,30 @@ export const AllReviewsPage = () => {
 
   return (
     <div className={css.page}>
-      <select value={sortOption} onChange={handleSortChange} className={css.sortSelect}>
-        <option value="date_desc">Сначала новые</option>
-        <option value="date_asc">Сначала старые</option>
-        <option value="likes_desc">Сначала популярные</option>
-      </select>
-
+      <div className={css.controls}>
+        <form
+          className={css.searchForm}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+            setSearchQuery(searchInput.trim());
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Искать рецензии..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className={css.searchInput}
+          />
+          <button type="submit" className={css.searchButton} />
+        </form>
+        <select value={sortOption} onChange={handleSortChange} className={css.sortSelect}>
+          <option value="date_desc">Сначала новые</option>
+          <option value="date_asc">Сначала старые</option>
+          <option value="likes_desc">Сначала популярные</option>
+        </select>
+      </div>
       {error ? <Alert>{error}</Alert> : <ReviewList reviews={reviews} />}
 
       {totalPages > 1 && (
