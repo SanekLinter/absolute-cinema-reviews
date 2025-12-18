@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Path, HTTPException
+from sqlalchemy.orm import Session, joinedload
 import models, schemas, database
-from dependencies import get_current_user, get_current_admin
+from dependencies import get_current_user, get_current_admin, get_current_user_optional
 from math import ceil
+from typing import Optional
 
 router = APIRouter(tags=["reviews"])
 
@@ -198,3 +199,40 @@ def get_moderation_reviews(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
+
+
+@router.get("/{review_id}", response_model=schemas.DetailReviewResponse)
+def get_review_detail(
+    review_id: int = Path(..., ge=1),
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: Session = Depends(database.get_db)
+):
+    review = (
+        db.query(models.Review)
+        .options(joinedload(models.Review.author))
+        .filter(models.Review.id == review_id)
+        .first()
+    )
+
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    is_author = current_user and current_user.id == review.user_id
+    is_admin = current_user and current_user.role == "admin"
+
+    if review.status == "approved" or is_author or is_admin:
+        return schemas.DetailReviewResponse(
+            id=review.id,
+            title=review.title,
+            movie_title=review.movie_title,
+            content=review.content,
+            status=review.status,
+            likes=review.likes,
+            author=schemas.UserBase(
+                id=review.author.id,
+                username=review.author.username
+            ),
+            created_at=review.created_at
+        )
+    else:
+        raise HTTPException(status_code=404, detail="Review not found")
