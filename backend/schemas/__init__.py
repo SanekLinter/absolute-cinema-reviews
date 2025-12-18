@@ -46,6 +46,11 @@ class MyReviewResponse(ReviewBase):
         from_attributes = True
 
 
+class DetailReviewResponse(ReviewBase):
+    status: str
+    author: UserBase
+
+
 class PaginationInfo(BaseModel):
     current_page: int
     total_pages: int

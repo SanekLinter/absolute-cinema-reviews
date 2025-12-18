@@ -1,10 +1,11 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from config import settings
 import models, database, config
+from typing import Optional
 
 bearer_scheme = HTTPBearer()
 ALGORITHM = "HS256"
@@ -30,7 +31,7 @@ def get_current_user(
     token = credentials.credentials
     try:
         payload = jwt.decode(token, config.settings.SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = int(payload["sub"])
+        user_id = int(payload["sub"])
     except JWTError:
         raise credentials_exception
 
@@ -39,6 +40,22 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_current_user_optional(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(database.get_db)
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization[7:]
+    try:
+        payload = jwt.decode(token, config.settings.SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        return user
+    except:
+        return None
 
 
 def get_current_admin(
