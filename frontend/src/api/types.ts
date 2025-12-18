@@ -1,6 +1,9 @@
-export interface User {
+export interface UserBase {
   id: number;
   username: string;
+}
+
+export interface User extends UserBase {
   role: 'user' | 'admin';
 }
 

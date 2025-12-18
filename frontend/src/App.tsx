@@ -7,6 +7,7 @@ import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { MyReviewsPage } from './pages/MyReviewsPage';
 import { ModerationReviewsPage } from './pages/ModerationReviewsPage';
+import { UserProfilePage } from './pages/UserProfilePage';
 import './styles/global.scss';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path={routes.getAllReviewsRoute()} element={<AllReviewsPage />} />
             <Route path={routes.getMyReviewsRoute()} element={<MyReviewsPage />} />
             <Route path={routes.getModerationRoute()} element={<ModerationReviewsPage />} />
+            <Route path={routes.getUserProfileRoutePattern()} element={<UserProfilePage />} />
             <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
             <Route path={routes.getSignInRoute()} element={<SignInPage />} />
           </Route>

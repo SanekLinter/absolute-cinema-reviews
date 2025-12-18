@@ -13,3 +13,5 @@ export const getReviewRoute = (reviewId: number) => `/reviews/${reviewId}`;
 export const getUserProfileRoute = (userId: number) => `/users/${userId}`;
 
 export const getNewReviewRoute = () => '/reviews/new';
+
+export const getUserProfileRoutePattern = () => '/users/:userId';
