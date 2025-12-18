@@ -26,3 +26,13 @@ export const getMyReviews = async (
   const response = await api.get('/reviews/my', { params });
   return response.data;
 };
+
+export const getModerationReviews = async (
+  params: {
+    page?: number;
+    limit?: number;
+  } = {}
+) => {
+  const response = await api.get('/reviews/moderation', { params });
+  return response.data;
+};
