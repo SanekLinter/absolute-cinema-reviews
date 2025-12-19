@@ -32,6 +32,16 @@ class ReviewBase(BaseModel):
     created_at: datetime
 
 
+class ReviewCreate(BaseModel):
+    title: str
+    movie_title: str
+    content: str
+
+
+class ReviewCreateResponse(BaseModel):
+    id: int
+
+
 class ReviewResponse(ReviewBase):
     author: UserBase
     

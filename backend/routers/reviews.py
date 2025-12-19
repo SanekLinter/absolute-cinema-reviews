@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Path, HTTPException
+from fastapi import APIRouter, Depends, Path, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 import models, schemas, database
 from dependencies import get_current_user, get_current_admin, get_current_user_optional
 from math import ceil
 from typing import Optional
+from datetime import datetime
 
 router = APIRouter(tags=["reviews"])
 
@@ -236,3 +237,27 @@ def get_review_detail(
         )
     else:
         raise HTTPException(status_code=404, detail="Review not found")
+
+
+@router.post("/", response_model=schemas.ReviewCreateResponse, status_code=status.HTTP_201_CREATED)
+def create_review(
+    review_in: schemas.ReviewCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    new_review = models.Review(
+        user_id=current_user.id,
+        title=review_in.title,
+        movie_title=review_in.movie_title,
+        content=review_in.content,
+        status="pending",
+        likes=0,
+        created_at=datetime.utcnow()
+    )
+    db.add(new_review)
+    db.commit()
+    db.refresh(new_review)
+
+    return schemas.ReviewCreateResponse(
+        id=new_review.id
+    )
