@@ -1,0 +1,100 @@
+@use '../../styles/vars' as *;
+
+.card {
+  background: $my-white;
+  border-radius: 5px;
+  padding: 10px 20px 10px;
+
+  .status {
+    margin-left: auto;
+    color: $orange;
+    font-weight: 600;
+    text-align: end;
+    font-size: 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: $black;
+    text-align: center;
+  }
+
+  .meta {
+    margin-left: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+
+    .movie {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: $black;
+
+      .movieIcon {
+        height: 22px;
+        width: auto;
+      }
+    }
+
+    .author {
+      color: $orange;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      .logoUser {
+        height: 18px;
+        width: auto;
+      }
+    }
+  }
+
+  .content {
+    margin: 10px 0 5px;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: $black;
+    text-align: justify;
+    background-color: $white;
+    border-radius: 5px;
+    padding: 5px 10px;
+    white-space: pre-line;
+
+    &::first-line {
+      text-indent: 40px;
+    }
+  }
+
+  .footer {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 10px;
+
+    .left {
+      font-size: 1.1rem;
+      font-weight: 600;
+      .date {
+        color: $orange;
+      }
+
+      .likes {
+        color: $black;
+        font-weight: 400;
+      }
+    }
+
+    .buttons {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-top: 10px;
+    }
+  }
+}
