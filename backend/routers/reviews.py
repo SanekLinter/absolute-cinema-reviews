@@ -281,3 +281,21 @@ def approve_review(
 
     return
 
+
+@router.post("/{review_id}/reject", status_code=status.HTTP_200_OK)
+def reject_review(
+    review_id: int = Path(..., ge=1),
+    current_user: models.User = Depends(get_current_admin),
+    db: Session = Depends(database.get_db)
+):
+    review = db.query(models.Review).filter(models.Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if review.status != "pending":
+        raise HTTPException(status_code=400, detail="Review has already been processed")
+
+    review.status = "rejected"
+    db.commit()
+
+    return
