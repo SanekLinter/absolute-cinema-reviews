@@ -261,3 +261,23 @@ def create_review(
     return schemas.ReviewCreateResponse(
         id=new_review.id
     )
+
+
+@router.post("/{review_id}/approve", status_code=status.HTTP_200_OK)
+def approve_review(
+    review_id: int = Path(..., ge=1),
+    current_user: models.User = Depends(get_current_admin),
+    db: Session = Depends(database.get_db)
+):
+    review = db.query(models.Review).filter(models.Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+
+    if review.status != "pending":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Review has already been processed")
+
+    review.status = "approved"
+    db.commit()
+
+    return
+
