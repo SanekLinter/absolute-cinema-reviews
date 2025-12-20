@@ -1,4 +1,5 @@
 import api from './index';
+import type { Review } from './types';
 
 export const getPublicReviews = async (
   params: {
@@ -35,4 +36,12 @@ export const getModerationReviews = async (
 ) => {
   const response = await api.get('/reviews/moderation', { params });
   return response.data;
+};
+
+export const getReviewById = async (reviewId: number) => {
+  const response = await api.get(`/reviews/${reviewId}`);
+  console.log('Response status:', response.status);
+  console.log('Response data:', response.data);
+  console.log('Reviews count:', response.data?.reviews?.length);
+  return response.data as Review;
 };

@@ -29,6 +29,7 @@ type ReviewFeedProps = {
   reviewCardProps?: {
     showLikes?: boolean;
     showStatus?: boolean;
+    moderation?: boolean;
   };
 };
 

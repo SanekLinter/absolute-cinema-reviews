@@ -8,16 +8,23 @@ type ReviewMiniCardProps = {
   review: Review;
   showLikes?: boolean;
   showStatus?: boolean;
+  moderation?: boolean;
 };
 
 export const ReviewMiniCard = ({
   review,
   showLikes = true,
   showStatus = false,
+  moderation = false,
 }: ReviewMiniCardProps) => {
   return (
     <div className={css.card}>
-      <Link to={getReviewRoute(review.id)} className={css.title}>
+      <Link
+        to={
+          moderation ? getReviewRoute(review.id, { mode: 'moderation' }) : getReviewRoute(review.id)
+        }
+        className={css.title}
+      >
         {review.title}
       </Link>
 

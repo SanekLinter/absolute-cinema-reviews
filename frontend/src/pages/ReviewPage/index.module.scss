@@ -1,0 +1,11 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/vars' as *;
+
+.page {
+  width: 80%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}

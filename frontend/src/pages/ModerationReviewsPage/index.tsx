@@ -9,7 +9,7 @@ export const ModerationReviewsPage = () => {
       <ReviewFeed
         loadReviews={getModerationReviews}
         withControls={false}
-        reviewCardProps={{ showLikes: false }}
+        reviewCardProps={{ showLikes: false, moderation: true }}
       />
     </div>
   );
