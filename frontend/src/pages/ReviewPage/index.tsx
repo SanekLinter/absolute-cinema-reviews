@@ -1,32 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import type { Review } from '../../api/types';
-import { getReviewById } from '../../api/reviews';
+import { deleteReview, getReviewById } from '../../api/reviews';
 import { Alert } from '../../components/Alert';
 import { ReviewCard } from '../../components/ReviewCard';
 import { useMe } from '../../context/AuthContext';
-import css from './index.module.scss';
 import { useNavigate } from 'react-router-dom';
 import { approveReview, rejectReview } from '../../api/reviews';
-import { getModerationRoute } from '../../lib/routes';
+import { getModerationRoute, getMyReviewsRoute } from '../../lib/routes';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import css from './index.module.scss';
 
 type ReviewViewMode = 'moderation' | 'author' | 'public';
 
 export const ReviewPage = () => {
-  const { reviewId } = useParams<{ reviewId: string }>();
-  const reviewIdNumber = reviewId ? Number(reviewId) : undefined;
-
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const me = useMe();
-
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
   const navigate = useNavigate();
+  const { reviewId } = useParams<{ reviewId: string }>();
+  const reviewIdNumber = reviewId ? Number(reviewId) : undefined;
 
   useEffect(() => {
     if (!reviewIdNumber || Number.isNaN(reviewIdNumber)) {
@@ -98,6 +100,29 @@ export const ReviewPage = () => {
     }
   };
 
+  const handleDeleteClick = () => {
+    setDeleteConfirmOpen(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setDeleteLoading(true);
+      await deleteReview(review.id);
+      navigate(getMyReviewsRoute());
+    } catch (err: any) {
+      setDeleteError(err.uiMessage || 'Не удалось удалить рецензию');
+      setDeleteLoading(false);
+      setDeleteConfirmOpen(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteLoading) {
+      setDeleteConfirmOpen(false);
+    }
+  };
+
   const viewConfig = {
     showLikes: viewMode !== 'moderation',
     showStatus: viewMode === 'author',
@@ -105,12 +130,21 @@ export const ReviewPage = () => {
     showControlButtons: viewMode === 'author',
     onApprove: handleApprove,
     onReject: handleReject,
+    onDelete: handleDeleteClick,
+    actionError: actionError,
+    deleteError: deleteError,
+    disableActions: actionLoading || deleteLoading,
   };
 
   return (
     <div className={css.page}>
-      {actionError && <Alert>{actionError}</Alert>}
       <ReviewCard review={review} {...viewConfig} disableActions={actionLoading} />
+      <DeleteConfirmModal
+        isOpen={deleteConfirmOpen}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        loading={deleteLoading}
+      />
     </div>
   );
 };

@@ -40,12 +40,12 @@ export const getModerationReviews = async (
 
 export const getReviewById = async (reviewId: number) => {
   const response = await api.get(`/reviews/${reviewId}`);
-  console.log('Response status:', response.status);
-  console.log('Response data:', response.data);
-  console.log('Reviews count:', response.data?.reviews?.length);
+
   return response.data as Review;
 };
 
 export const approveReview = (reviewId: number) => api.post(`/reviews/${reviewId}/approve`);
 
 export const rejectReview = (reviewId: number) => api.post(`/reviews/${reviewId}/reject`);
+
+export const deleteReview = (reviewId: number) => api.delete(`/reviews/${reviewId}`);

@@ -4,6 +4,7 @@ import { formatDate } from '../../utils/date';
 import { getEditReviewRoute, getUserProfileRoute } from '../../lib/routes';
 import { Button, LinkButton } from '../Button';
 import css from './index.module.scss';
+import { Alert } from '../Alert';
 
 type ReviewCardProps = {
   review: Review;
@@ -13,7 +14,10 @@ type ReviewCardProps = {
   showControlButtons?: boolean;
   onApprove?: () => void;
   onReject?: () => void;
+  onDelete?: () => void;
   disableActions?: boolean;
+  actionError?: string | null;
+  deleteError?: string | null;
 };
 
 export const ReviewCard = ({
@@ -24,7 +28,10 @@ export const ReviewCard = ({
   showControlButtons = true,
   onApprove,
   onReject,
+  onDelete,
   disableActions,
+  actionError = null,
+  deleteError = null,
 }: ReviewCardProps) => {
   return (
     <div className={css.card}>
@@ -62,10 +69,14 @@ export const ReviewCard = ({
         {showControlButtons && (
           <div className={css.buttons}>
             <LinkButton to={getEditReviewRoute(review.id)}>Редактировать</LinkButton>
-            <Button color="white">Удалить</Button>
+            <Button onClick={onDelete} color="white">
+              Удалить
+            </Button>
           </div>
         )}
       </div>
+      {actionError && <Alert>{actionError}</Alert>}
+      {deleteError && <Alert>{deleteError}</Alert>}
     </div>
   );
 };
