@@ -6,6 +6,9 @@ import { Alert } from '../../components/Alert';
 import { ReviewCard } from '../../components/ReviewCard';
 import { useMe } from '../../context/AuthContext';
 import css from './index.module.scss';
+import { useNavigate } from 'react-router-dom';
+import { approveReview, rejectReview } from '../../api/reviews';
+import { getModerationRoute } from '../../lib/routes';
 
 type ReviewViewMode = 'moderation' | 'author' | 'public';
 
@@ -16,11 +19,14 @@ export const ReviewPage = () => {
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const me = useMe();
 
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!reviewIdNumber || Number.isNaN(reviewIdNumber)) {
@@ -66,16 +72,45 @@ export const ReviewPage = () => {
 
   const viewMode = getViewMode();
 
+  const handleApprove = async () => {
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      await approveReview(review.id);
+      navigate(getModerationRoute());
+    } catch (err: any) {
+      setActionError(err.uiMessage || 'Не удалось одобрить рецензию');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      await rejectReview(review.id);
+      navigate(getModerationRoute());
+    } catch (err: any) {
+      setActionError(err.uiMessage || 'Не удалось отклонить рецензию');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const viewConfig = {
     showLikes: viewMode !== 'moderation',
     showStatus: viewMode === 'author',
     showModerationButtons: viewMode === 'moderation',
     showControlButtons: viewMode === 'author',
+    onApprove: handleApprove,
+    onReject: handleReject,
   };
 
   return (
     <div className={css.page}>
-      <ReviewCard review={review} {...viewConfig} />
+      {actionError && <Alert>{actionError}</Alert>}
+      <ReviewCard review={review} {...viewConfig} disableActions={actionLoading} />
     </div>
   );
 };

@@ -89,6 +89,10 @@ export const ReviewFeed = ({
     setSortOption(e.target.value as SortOption);
   };
 
+  if (loading) {
+    return null;
+  }
+
   return (
     <>
       {withControls && (
