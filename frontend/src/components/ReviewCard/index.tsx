@@ -13,6 +13,7 @@ type ReviewCardProps = {
   showControlButtons?: boolean;
   onApprove?: () => void;
   onReject?: () => void;
+  disableActions?: boolean;
 };
 
 export const ReviewCard = ({
@@ -23,6 +24,7 @@ export const ReviewCard = ({
   showControlButtons = true,
   onApprove,
   onReject,
+  disableActions,
 }: ReviewCardProps) => {
   return (
     <div className={css.card}>
@@ -49,8 +51,10 @@ export const ReviewCard = ({
         </div>
         {showModerationButtons && (
           <div className={css.buttons}>
-            <Button onClick={onApprove}>Одобрить</Button>
-            <Button onClick={onReject} color="white">
+            <Button onClick={onApprove} loading={disableActions}>
+              Одобрить
+            </Button>
+            <Button onClick={onReject} loading={disableActions} color="white">
               Отклонить
             </Button>
           </div>

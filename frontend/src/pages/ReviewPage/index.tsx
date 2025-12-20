@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import type { Review } from '../../api/types';
-import { getModerationReviews, getReviewById } from '../../api/reviews';
+import { getReviewById } from '../../api/reviews';
 import { Alert } from '../../components/Alert';
 import { ReviewCard } from '../../components/ReviewCard';
 import { useMe } from '../../context/AuthContext';
@@ -19,6 +19,8 @@ export const ReviewPage = () => {
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const me = useMe();
 
@@ -71,13 +73,29 @@ export const ReviewPage = () => {
   const viewMode = getViewMode();
 
   const handleApprove = async () => {
-    await approveReview(review.id);
-    navigate(getModerationRoute());
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      await approveReview(review.id);
+      navigate(getModerationRoute());
+    } catch (err: any) {
+      setActionError(err.uiMessage || 'Не удалось одобрить рецензию');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleReject = async () => {
-    await rejectReview(review.id);
-    navigate(getModerationRoute());
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      await rejectReview(review.id);
+      navigate(getModerationRoute());
+    } catch (err: any) {
+      setActionError(err.uiMessage || 'Не удалось отклонить рецензию');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const viewConfig = {
@@ -91,7 +109,8 @@ export const ReviewPage = () => {
 
   return (
     <div className={css.page}>
-      <ReviewCard review={review} {...viewConfig} />
+      {actionError && <Alert>{actionError}</Alert>}
+      <ReviewCard review={review} {...viewConfig} disableActions={actionLoading} />
     </div>
   );
 };
