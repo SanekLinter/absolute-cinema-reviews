@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import type { Review } from '../../api/types';
 import { formatDate } from '../../utils/date';
-import { getUserProfileRoute } from '../../lib/routes';
-import { Button } from '../Button';
+import { getEditReviewRoute, getUserProfileRoute } from '../../lib/routes';
+import { Button, LinkButton } from '../Button';
 import css from './index.module.scss';
 
 type ReviewCardProps = {
@@ -61,7 +61,7 @@ export const ReviewCard = ({
         )}
         {showControlButtons && (
           <div className={css.buttons}>
-            <Button>Редактировать</Button>
+            <LinkButton to={getEditReviewRoute(review.id)}>Редактировать</LinkButton>
             <Button color="white">Удалить</Button>
           </div>
         )}
