@@ -12,23 +12,28 @@
   cursor: pointer;
   user-select: none;
   font-size: 16px;
-  text-decoration: none; // важно для Link
-  display: inline-block; // важно для Link
+  text-decoration: none;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   box-shadow: 2px 2px 1px $black;
+
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   &.orange {
     background-color: $orange;
     color: $my-white;
 
     &:hover {
-      background-color: #e67e22;
+      background-color: lighten($orange, 5);
+      box-shadow: 3px 3px 1px $grey;
     }
 
     &:active {
-      background-color: #f39c12;
+      background-color: $orange;
       box-shadow: none;
       transform: translateY(2px) translateX(2px);
     }
@@ -41,16 +46,17 @@
   }
 
   &.white {
-    background-color: $my-white;
+    background-color: $white;
     color: $black;
     border-color: $black;
 
     &:hover {
-      background-color: #ddd8d8;
+      box-shadow: 3px 3px 1px $grey;
+      background-color: lighten($white, 5);
     }
 
     &:active {
-      background-color: #e0e0e0;
+      background-color: darken($white, 10);
       box-shadow: none;
       transform: translateY(2px) translateX(2px);
     }
