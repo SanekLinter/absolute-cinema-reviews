@@ -45,3 +45,7 @@ export const getReviewById = async (reviewId: number) => {
   console.log('Reviews count:', response.data?.reviews?.length);
   return response.data as Review;
 };
+
+export const approveReview = (reviewId: number) => api.post(`/reviews/${reviewId}/approve`);
+
+export const rejectReview = (reviewId: number) => api.post(`/reviews/${reviewId}/reject`);

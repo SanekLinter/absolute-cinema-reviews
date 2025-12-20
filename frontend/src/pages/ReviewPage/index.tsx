@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import type { Review } from '../../api/types';
-import { getReviewById } from '../../api/reviews';
+import { getModerationReviews, getReviewById } from '../../api/reviews';
 import { Alert } from '../../components/Alert';
 import { ReviewCard } from '../../components/ReviewCard';
 import { useMe } from '../../context/AuthContext';
 import css from './index.module.scss';
+import { useNavigate } from 'react-router-dom';
+import { approveReview, rejectReview } from '../../api/reviews';
+import { getModerationRoute } from '../../lib/routes';
 
 type ReviewViewMode = 'moderation' | 'author' | 'public';
 
@@ -21,6 +24,7 @@ export const ReviewPage = () => {
 
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!reviewIdNumber || Number.isNaN(reviewIdNumber)) {
@@ -66,11 +70,23 @@ export const ReviewPage = () => {
 
   const viewMode = getViewMode();
 
+  const handleApprove = async () => {
+    await approveReview(review.id);
+    navigate(getModerationRoute());
+  };
+
+  const handleReject = async () => {
+    await rejectReview(review.id);
+    navigate(getModerationRoute());
+  };
+
   const viewConfig = {
     showLikes: viewMode !== 'moderation',
     showStatus: viewMode === 'author',
     showModerationButtons: viewMode === 'moderation',
     showControlButtons: viewMode === 'author',
+    onApprove: handleApprove,
+    onReject: handleReject,
   };
 
   return (
