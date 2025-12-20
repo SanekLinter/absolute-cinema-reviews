@@ -16,8 +16,12 @@ export const getReviewRoute = (reviewId: number, options?: { mode?: 'moderation'
 };
 export const getUserProfileRoute = (userId: number) => `/users/${userId}`;
 
+export const getEditReviewRoute = (reviewId: number) => `/reviews/${reviewId}/edit`;
+
 export const getNewReviewRoute = () => '/reviews/new';
 
 export const getUserProfileRoutePattern = () => '/users/:userId';
+
+export const getEditReviewRoutePattern = () => '/reviews/:reviewId/edit';
 
 export const getReviewRoutePattern = () => '/reviews/:reviewId';
