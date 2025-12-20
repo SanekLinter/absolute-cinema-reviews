@@ -319,6 +319,45 @@ def delete_review(
 
     db.delete(review)
     db.commit()
-    
+
     return
 
+
+@router.put("/{review_id}", response_model=schemas.DetailReviewResponse)
+def edit_review(
+    review_in: schemas.ReviewCreate,
+    review_id: int = Path(..., ge=1),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    review = db.query(models.Review).filter(models.Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if review.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access is denied: you can only delete your own reviews"
+        )
+
+    review.title = review_in.title
+    review.movie_title = review_in.movie_title
+    review.content = review_in.content
+    review.status = "pending"
+
+    db.commit()
+    db.refresh(review)
+
+    return schemas.DetailReviewResponse(
+        id=review.id,
+        title=review.title,
+        movie_title=review.movie_title,
+        content=review.content,
+        status=review.status,
+        likes=review.likes,
+        author=schemas.UserBase(
+            id=current_user.id,
+            username=current_user.username
+        ),
+        created_at=review.created_at
+    )

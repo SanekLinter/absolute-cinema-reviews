@@ -33,9 +33,9 @@ class ReviewBase(BaseModel):
 
 
 class ReviewCreate(BaseModel):
-    title: str
-    movie_title: str
-    content: str
+    title: str = Field(..., min_length=5, max_length=100)
+    movie_title: str = Field(..., min_length=1, max_length=100)
+    content: str = Field(..., min_length=100, max_length=5000)
 
 
 class ReviewCreateResponse(BaseModel):
