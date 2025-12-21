@@ -49,3 +49,8 @@ export const approveReview = (reviewId: number) => api.post(`/reviews/${reviewId
 export const rejectReview = (reviewId: number) => api.post(`/reviews/${reviewId}/reject`);
 
 export const deleteReview = (reviewId: number) => api.delete(`/reviews/${reviewId}`);
+
+export const createReview = async (title: string, movie_title: string, content: string) => {
+  const response = await api.post('/reviews', { title, movie_title, content });
+  return response.data as Review;
+};
