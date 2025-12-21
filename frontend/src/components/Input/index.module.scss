@@ -3,18 +3,16 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 
   .label {
     font-size: 20;
     font-weight: 500;
-    color: $my-white;
   }
 
   .input {
     padding: 10px 14px;
     border: 1px solid $grey;
-    background: $my-white;
+    background: $white;
     border-radius: 6px;
     color: $black;
     font-size: 15px;
@@ -22,7 +20,10 @@
 
     &:focus {
       outline: none;
-      border-color: $orange;
+    }
+
+    &::placeholder {
+      color: #aaa;
     }
   }
 
