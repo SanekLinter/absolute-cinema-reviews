@@ -10,6 +10,7 @@ import { ModerationReviewsPage } from './pages/ModerationReviewsPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { ReviewPage } from './pages/ReviewPage';
 import { CreateReviewPage } from './pages/CreateReviewPage';
+import { EditReviewPage } from './pages/EditReviewPage';
 import './styles/global.scss';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path={routes.getUserProfileRoutePattern()} element={<UserProfilePage />} />
             <Route path={routes.getReviewRoutePattern()} element={<ReviewPage />} />
             <Route path={routes.getNewReviewRoute()} element={<CreateReviewPage />} />
+            <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
             <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
             <Route path={routes.getSignInRoute()} element={<SignInPage />} />
           </Route>
