@@ -1,16 +1,16 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
-import { createReview } from '../../api/reviews';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getReviewById, updateReview } from '../../api/reviews';
 import { Input } from '../../components/Input';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { getReviewRoute } from '../../lib/routes';
-import { useState } from 'react';
 import css from './index.module.scss';
 
-const newReviewSchema = z.object({
+const editReviewSchema = z.object({
   title: z
     .string()
     .min(5, 'Минимум 5 символов')
@@ -37,66 +37,93 @@ const newReviewSchema = z.object({
     ),
 });
 
-type NewReviewFormData = z.infer<typeof newReviewSchema>;
+type EditReviewFormData = z.infer<typeof editReviewSchema>;
 
-export const CreateReviewPage = () => {
+export const EditReviewPage = () => {
+  const { reviewId } = useParams<{ reviewId: string }>();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const {
-    control,
     register,
     handleSubmit,
+    control,
+    reset,
     formState: { errors, isSubmitting },
-  } = useForm<NewReviewFormData>({
-    resolver: zodResolver(newReviewSchema),
+  } = useForm<EditReviewFormData>({
+    resolver: zodResolver(editReviewSchema),
     mode: 'onChange',
   });
 
   const contentValue = useWatch({ control, name: 'content' });
-  const onSubmit = async (data: NewReviewFormData) => {
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      if (!reviewId) return;
+      const id = Number(reviewId);
+      if (isNaN(id)) {
+        setServerError('Некорректный ID рецензии');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const review = await getReviewById(id);
+        reset({
+          title: review.title,
+          movie_title: review.movie_title,
+          content: review.content,
+        });
+      } catch (err: any) {
+        setServerError(err.uiMessage || 'Не удалось загрузить рецензию');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReview();
+  }, [reviewId, reset]);
+
+  const onSubmit = async (data: EditReviewFormData) => {
+    if (!reviewId) return;
     setServerError(null);
+
     try {
-      const review = await createReview(
+      const updatedReview = await updateReview(
+        Number(reviewId),
         data.title.trim(),
         data.movie_title.trim(),
         data.content.trim()
       );
-      navigate(getReviewRoute(review.id));
+      navigate(getReviewRoute(updatedReview.id));
     } catch (err: any) {
-      setServerError(err.uiMessage || 'Не удалось создать рецензию');
+      setServerError(err.uiMessage || 'Не удалось сохранить изменения');
     }
   };
 
+  if (loading) {
+    return <div className={css.page}>Загрузка рецензии...</div>;
+  }
+
   return (
     <div className={css.page}>
-      <h1 className={css.heading}>Новая рецензия</h1>
+      <h1 className={css.heading}>Редактирование рецензии</h1>
+
       <form onSubmit={handleSubmit(onSubmit)} className={css.form}>
         {serverError && <Alert>{serverError}</Alert>}
 
-        <Input
-          label="Заголовок рецензии"
-          placeholder="Введите заголовок..."
-          autoFocus
-          error={errors.title?.message}
-          {...register('title')}
-        />
+        <Input label="Заголовок рецензии" error={errors.title?.message} {...register('title')} />
 
         <Input
           label="Название фильма"
-          placeholder="Введите название фильма..."
           error={errors.movie_title?.message}
           {...register('movie_title')}
         />
 
         <div className={css.textareaWrapper}>
           <label className={css.textareaLabel}>Текст рецензии</label>
-          <textarea
-            className={css.textarea}
-            placeholder="Введите текст рецензии..."
-            rows={12}
-            {...register('content')}
-          />
+          <textarea className={css.textarea} rows={12} {...register('content')} />
           {errors.content && <div className={css.textareaError}>{errors.content.message}</div>}
           <div className={css.counter}>{contentValue?.length || 0} / 5000</div>
         </div>

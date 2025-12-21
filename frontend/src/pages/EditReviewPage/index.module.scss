@@ -1,0 +1,75 @@
+@use '../../styles/vars' as *;
+
+.page {
+  width: 80%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: $my-white;
+  border-radius: 5px;
+  padding: 10px 20px 10px;
+
+  .heading {
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    color: $black;
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .textareaWrapper {
+    display: flex;
+    flex-direction: column;
+
+    .textareaLabel {
+      font-size: 20px;
+      font-weight: 500;
+      color: $black;
+    }
+
+    .textarea {
+      font-family: inherit;
+      resize: vertical;
+      min-height: 300px;
+      transition: border-color 0.2s ease;
+      padding: 10px 14px;
+      border: 1px solid $grey;
+      background: $white;
+      border-radius: 6px;
+      color: $black;
+      font-size: 15px;
+
+      &:focus {
+        outline: none;
+      }
+
+      &::placeholder {
+        color: #aaa;
+      }
+    }
+
+    .textareaError {
+      color: $orange;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .counter {
+      align-self: flex-end;
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
+    }
+  }
+}
+
+.button {
+  display: flex;
+  justify-content: flex-end;
+}
