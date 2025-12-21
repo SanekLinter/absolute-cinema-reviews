@@ -8,8 +8,9 @@ import { SignUpPage } from './pages/SignUpPage';
 import { MyReviewsPage } from './pages/MyReviewsPage';
 import { ModerationReviewsPage } from './pages/ModerationReviewsPage';
 import { UserProfilePage } from './pages/UserProfilePage';
-import './styles/global.scss';
 import { ReviewPage } from './pages/ReviewPage';
+import { CreateReviewPage } from './pages/CreateReviewPage';
+import './styles/global.scss';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path={routes.getModerationRoute()} element={<ModerationReviewsPage />} />
             <Route path={routes.getUserProfileRoutePattern()} element={<UserProfilePage />} />
             <Route path={routes.getReviewRoutePattern()} element={<ReviewPage />} />
+            <Route path={routes.getNewReviewRoute()} element={<CreateReviewPage />} />
             <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
             <Route path={routes.getSignInRoute()} element={<SignInPage />} />
           </Route>
