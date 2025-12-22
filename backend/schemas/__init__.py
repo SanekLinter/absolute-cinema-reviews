@@ -87,3 +87,7 @@ class PaginationParams(BaseModel):
 
 class PublicPaginationParams(PaginationParams):
     author_id: Optional[int] = Field(None)
+
+class LikeToggleResponse(BaseModel):
+    likes: int = Field(..., ge=0)
+    is_liked: bool
