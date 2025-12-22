@@ -30,6 +30,7 @@ class ReviewBase(BaseModel):
     content: str
     likes: int
     created_at: datetime
+    is_liked: Optional[bool]
 
 
 class ReviewCreate(BaseModel):

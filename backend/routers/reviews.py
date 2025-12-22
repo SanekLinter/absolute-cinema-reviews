@@ -12,6 +12,7 @@ router = APIRouter(tags=["reviews"])
 @router.get("/public", response_model=schemas.PaginatedReviewsResponse)
 def get_public_reviews(
     params: schemas.PublicPaginationParams = Depends(),
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: Session = Depends(database.get_db)
 ):
     try:
@@ -61,6 +62,12 @@ def get_public_reviews(
                 author=schemas.UserBase(
                     id=review.author.id,
                     username=review.author.username
+                ),
+                is_liked = (
+                    current_user and 
+                    db.query(models.Like)
+                    .filter_by(review_id=review.id, user_id=current_user.id)
+                    .first() is not None
                 )
             )
             for review in reviews
@@ -128,7 +135,12 @@ def get_my_reviews(
                 content=review.content,
                 likes=review.likes,
                 created_at=review.created_at,
-                status=review.status
+                status=review.status,
+                is_liked = (
+                    db.query(models.Like)
+                    .filter_by(review_id=review.id, user_id=current_user.id)
+                    .first() is not None
+                )
             )
             for review in reviews
         ]
@@ -233,7 +245,13 @@ def get_review_detail(
                 id=review.author.id,
                 username=review.author.username
             ),
-            created_at=review.created_at
+            created_at=review.created_at,
+            is_liked = (
+                current_user and 
+                db.query(models.Like)
+                .filter_by(review_id=review.id, user_id=current_user.id)
+                .first() is not None
+            )
         )
     else:
         raise HTTPException(status_code=404, detail="Review not found")
