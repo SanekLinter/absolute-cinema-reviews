@@ -193,7 +193,8 @@ def get_moderation_reviews(
                 author=schemas.UserBase(
                     id=review.author.id,
                     username=review.author.username
-                )
+                ),
+                is_liked=None
             )
             for review in reviews
         ]
