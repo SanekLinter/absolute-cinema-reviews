@@ -361,3 +361,39 @@ def edit_review(
         ),
         created_at=review.created_at
     )
+
+
+@router.post("/{review_id}/like", response_model=schemas.LikeToggleResponse)
+def toggle_like(
+    review_id: int = Path(..., ge=1),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    review = db.query(models.Review).filter(models.Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if review.status != "approved":
+        raise HTTPException(status_code=400, detail="You can only like approved reviews")
+
+    existing_like = db.query(models.Like).filter(
+        models.Like.review_id == review_id,
+        models.Like.user_id == current_user.id
+    ).first()
+
+    if existing_like:
+        db.delete(existing_like)
+        review.likes -= 1
+        is_liked = False
+    else:
+        new_like = models.Like(user_id=current_user.id, review_id=review_id)
+        db.add(new_like)
+        review.likes += 1
+        is_liked = True
+
+    db.commit()
+
+    return schemas.LikeToggleResponse(
+        likes=review.likes,
+        is_liked=is_liked
+    )
