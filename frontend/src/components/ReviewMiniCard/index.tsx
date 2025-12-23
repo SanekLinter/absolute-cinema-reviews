@@ -3,12 +3,14 @@ import type { Review } from '../../api/types';
 import { formatDate } from '../../utils/date';
 import { getReviewRoute, getUserProfileRoute } from '../../lib/routes';
 import css from './index.module.scss';
+import { Likes } from '../Likes';
 
 type ReviewMiniCardProps = {
   review: Review;
   showLikes?: boolean;
   showStatus?: boolean;
   moderation?: boolean;
+  onLikeUpdate?: (eviewId: number, newLikes: number, newIsLiked: boolean) => void;
 };
 
 export const ReviewMiniCard = ({
@@ -16,7 +18,9 @@ export const ReviewMiniCard = ({
   showLikes = true,
   showStatus = false,
   moderation = false,
+  onLikeUpdate,
 }: ReviewMiniCardProps) => {
+  showLikes = showLikes && review.status !== 'pending' && review.status !== 'rejected';
   return (
     <div className={css.card}>
       <Link
@@ -39,13 +43,25 @@ export const ReviewMiniCard = ({
 
         <span className={css.date}>{formatDate(review.created_at)}</span>
       </div>
-
-      <p className={css.preview}>
-        {review.content.length > 300 ? review.content.slice(0, 300) + '…' : review.content}
-      </p>
+      <Link
+        to={
+          moderation ? getReviewRoute(review.id, { mode: 'moderation' }) : getReviewRoute(review.id)
+        }
+      >
+        <p className={css.preview}>
+          {review.content.length > 300 ? review.content.slice(0, 300) + '…' : review.content}
+        </p>
+      </Link>
 
       <div className={css.meta}>
-        {showLikes && <div className={css.likes}>🧡 {review.likes}</div>}
+        {showLikes && (
+          <Likes
+            reviewId={review.id}
+            likes={review.likes}
+            isLiked={review.is_liked}
+            onUpdate={onLikeUpdate}
+          />
+        )}
         {showStatus && <span className={css.status}>{review.status}</span>}
       </div>
     </div>
