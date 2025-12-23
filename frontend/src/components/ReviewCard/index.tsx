@@ -5,6 +5,7 @@ import { getEditReviewRoute, getUserProfileRoute } from '../../lib/routes';
 import { Button, LinkButton } from '../Button';
 import css from './index.module.scss';
 import { Alert } from '../Alert';
+import { Likes } from '../Likes';
 
 type ReviewCardProps = {
   review: Review;
@@ -33,6 +34,8 @@ export const ReviewCard = ({
   actionError = null,
   deleteError = null,
 }: ReviewCardProps) => {
+  showLikes = showLikes && review.status === 'approved';
+
   return (
     <div className={css.card}>
       {showStatus && <div className={css.status}>{review.status}</div>}
@@ -54,7 +57,9 @@ export const ReviewCard = ({
       <div className={css.footer}>
         <div className={css.left}>
           <p className={css.date}>{formatDate(review.created_at)}</p>
-          {showLikes && <div className={css.likes}>🧡 {review.likes}</div>}
+          {showLikes && (
+            <Likes reviewId={review.id} likes={review.likes} isLiked={review.is_liked} />
+          )}
         </div>
         {showModerationButtons && (
           <div className={css.buttons}>
