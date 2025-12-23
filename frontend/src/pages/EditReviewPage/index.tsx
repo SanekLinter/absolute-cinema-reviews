@@ -9,6 +9,7 @@ import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { getReviewRoute } from '../../lib/routes';
 import css from './index.module.scss';
+import { useMe } from '../../context/AuthContext';
 
 const editReviewSchema = z.object({
   title: z
@@ -44,6 +45,8 @@ export const EditReviewPage = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [getReviewError, setGetReviewError] = useState<string | null>(null);
+  const me = useMe();
 
   const {
     register,
@@ -63,27 +66,31 @@ export const EditReviewPage = () => {
       if (!reviewId) return;
       const id = Number(reviewId);
       if (isNaN(id)) {
-        setServerError('Некорректный ID рецензии');
+        setGetReviewError('Некорректный ID рецензии');
         setLoading(false);
         return;
       }
 
       try {
         const review = await getReviewById(id);
+        if (!me || review.author.id !== me.id) {
+          setGetReviewError('У вас нет прав на редактирование этой рецензии');
+          return;
+        }
         reset({
           title: review.title,
           movie_title: review.movie_title,
           content: review.content,
         });
       } catch (err: any) {
-        setServerError(err.uiMessage || 'Не удалось загрузить рецензию');
+        setGetReviewError(err.uiMessage || 'Не удалось загрузить рецензию');
       } finally {
         setLoading(false);
       }
     };
 
     fetchReview();
-  }, [reviewId, reset]);
+  }, [reviewId, reset, me]);
 
   const onSubmit = async (data: EditReviewFormData) => {
     if (!reviewId) return;
@@ -104,6 +111,10 @@ export const EditReviewPage = () => {
 
   if (loading) {
     return <div className={css.page}>Загрузка рецензии...</div>;
+  }
+
+  if (getReviewError) {
+    return <Alert>{getReviewError}</Alert>;
   }
 
   return (
