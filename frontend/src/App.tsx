@@ -11,6 +11,7 @@ import { UserProfilePage } from './pages/UserProfilePage';
 import { ReviewPage } from './pages/ReviewPage';
 import { CreateReviewPage } from './pages/CreateReviewPage';
 import { EditReviewPage } from './pages/EditReviewPage';
+import { RequireAuth, RequireAdmin } from './components/ProtectedRoutes';
 import './styles/global.scss';
 
 function App() {
@@ -20,14 +21,18 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path={routes.getAllReviewsRoute()} element={<AllReviewsPage />} />
-            <Route path={routes.getMyReviewsRoute()} element={<MyReviewsPage />} />
-            <Route path={routes.getModerationRoute()} element={<ModerationReviewsPage />} />
-            <Route path={routes.getUserProfileRoutePattern()} element={<UserProfilePage />} />
             <Route path={routes.getReviewRoutePattern()} element={<ReviewPage />} />
-            <Route path={routes.getNewReviewRoute()} element={<CreateReviewPage />} />
-            <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
+            <Route path={routes.getUserProfileRoutePattern()} element={<UserProfilePage />} />
             <Route path={routes.getSignUpRoute()} element={<SignUpPage />} />
             <Route path={routes.getSignInRoute()} element={<SignInPage />} />
+            <Route element={<RequireAuth />}>
+              <Route path={routes.getMyReviewsRoute()} element={<MyReviewsPage />} />
+              <Route path={routes.getNewReviewRoute()} element={<CreateReviewPage />} />
+              <Route path={routes.getEditReviewRoutePattern()} element={<EditReviewPage />} />
+            </Route>
+            <Route element={<RequireAdmin />}>
+              <Route path={routes.getModerationRoute()} element={<ModerationReviewsPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
