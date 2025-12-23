@@ -13,6 +13,7 @@ export interface Review {
   movie_title: string;
   content: string;
   likes: number;
+  is_liked: boolean;
   created_at: string;
   status: 'approved' | 'pending' | 'rejected';
   author: {

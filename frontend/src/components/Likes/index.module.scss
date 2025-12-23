@@ -1,0 +1,20 @@
+@use '../../styles/vars' as *;
+
+.button {
+  border: none;
+  padding: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  &:disabled {
+    cursor: not-allowed;
+    color: $black;
+  }
+
+  .icon {
+    height: 25px;
+    width: auto;
+  }
+}

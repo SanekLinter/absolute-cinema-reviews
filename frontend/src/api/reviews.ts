@@ -68,3 +68,8 @@ export const updateReview = async (
   });
   return response.data as Review;
 };
+
+export const toggleLike = async (id: number): Promise<{ likes: number; is_liked: boolean }> => {
+  const response = await api.post(`/reviews/${id}/like`);
+  return response.data;
+};
