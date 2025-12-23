@@ -12,6 +12,7 @@ import { ReviewPage } from './pages/ReviewPage';
 import { CreateReviewPage } from './pages/CreateReviewPage';
 import { EditReviewPage } from './pages/EditReviewPage';
 import { RequireAuth, RequireAdmin } from './components/ProtectedRoutes';
+import { NotFoundPage } from './pages/NotFoundPage';
 import './styles/global.scss';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route element={<RequireAdmin />}>
               <Route path={routes.getModerationRoute()} element={<ModerationReviewsPage />} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

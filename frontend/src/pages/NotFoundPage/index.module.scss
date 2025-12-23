@@ -1,0 +1,25 @@
+/* index.module.scss */
+@use '../../styles/mixins' as *;
+@use '../../styles/vars' as *;
+
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  padding: 2rem;
+  text-align: center;
+  flex-direction: column;
+
+  .title {
+    font-size: 6rem;
+    font-weight: 700;
+    color: $orange;
+  }
+
+  .description {
+    color: $orange;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+}
