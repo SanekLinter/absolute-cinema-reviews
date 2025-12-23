@@ -35,7 +35,7 @@ type ReviewFeedProps = {
 
 export const ReviewFeed = ({
   loadReviews,
-  withControls = true,
+  withControls = false,
   reviewCardProps,
   authorId,
 }: ReviewFeedProps) => {
@@ -89,9 +89,19 @@ export const ReviewFeed = ({
     setSortOption(e.target.value as SortOption);
   };
 
-  if (loading) {
-    return null;
-  }
+  const handleLikeUpdate = (reviewId: number, newLikes: number, newIsLiked: boolean) => {
+    setReviews((prevReviews) => {
+      const updatedReviews = prevReviews.map((r) =>
+        r.id === reviewId ? { ...r, likes: newLikes, is_liked: newIsLiked } : r
+      );
+
+      if (sortOption !== 'likes_desc') {
+        return updatedReviews;
+      }
+
+      return [...updatedReviews].sort((a, b) => b.likes - a.likes);
+    });
+  };
 
   return (
     <>
@@ -119,7 +129,13 @@ export const ReviewFeed = ({
       {error ? (
         <Alert>{error}</Alert>
       ) : (
-        <ReviewList reviews={reviews} cardProps={reviewCardProps} />
+        !loading && (
+          <ReviewList
+            reviews={reviews}
+            cardProps={reviewCardProps}
+            onLikeUpdate={handleLikeUpdate}
+          />
+        )
       )}
 
       {totalPages > 1 && (

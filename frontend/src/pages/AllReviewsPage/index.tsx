@@ -5,7 +5,7 @@ import css from './index.module.scss';
 export const AllReviewsPage = () => {
   return (
     <div className={css.page}>
-      <ReviewFeed loadReviews={getPublicReviews} />
+      <ReviewFeed loadReviews={getPublicReviews} withControls={true} />
     </div>
   );
 };
