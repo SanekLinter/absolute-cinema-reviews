@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // добавь useNavigate
 import { LinkButton, Button } from '../Button';
 import css from './index.module.scss';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,12 @@ import {
 
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate(getSignInRoute(), { replace: true });
+  };
 
   return (
     <nav className={css.navbar}>
@@ -35,7 +41,7 @@ export const Navbar = () => {
               {user?.role === 'admin' && (
                 <li>
                   <Link className={css.link} to={getModerationRoute()}>
-                    Модерация
+                    Рецензии на модерации
                   </Link>
                 </li>
               )}
@@ -47,12 +53,12 @@ export const Navbar = () => {
       <div className={css.right}>
         {isAuthenticated ? (
           <>
-            <Button color="white" onClick={logout}>
+            <Button color="white" onClick={handleLogout}>
               Выйти
             </Button>
             <div className={css.username}>
               {user?.username}
-              <img src="/user.png" alt="Logo" className={css.logoUser} />
+              <img src="/user.png" className={css.logoUser} />
             </div>
           </>
         ) : (
