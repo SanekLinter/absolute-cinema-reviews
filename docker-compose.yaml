@@ -11,8 +11,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app  # hot-reload for dev
+    #volumes:
+    #  - ./backend:/app  # hot-reload for dev
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -31,6 +31,8 @@ services:
     image: postgres:16-alpine
     env_file:
       - .env
+    #ports:
+    #  - "9000:5432" # port mapping for debug
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
