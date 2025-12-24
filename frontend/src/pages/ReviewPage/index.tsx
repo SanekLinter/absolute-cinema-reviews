@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { approveReview, rejectReview } from '../../api/reviews';
 import { getModerationRoute, getMyReviewsRoute } from '../../lib/routes';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { Spinner } from '../../components/Spinner';
 import css from './index.module.scss';
 
 type ReviewViewMode = 'moderation' | 'author' | 'public';
@@ -60,7 +61,7 @@ export const ReviewPage = () => {
   }
 
   if (!review || loading) {
-    return null;
+    return <Spinner />;
   }
 
   const isAdmin = me?.role === 'admin';

@@ -8,8 +8,9 @@ import { Input } from '../../components/Input';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { getReviewRoute } from '../../lib/routes';
-import css from './index.module.scss';
 import { useMe } from '../../context/AuthContext';
+import { Spinner } from '../../components/Spinner';
+import css from './index.module.scss';
 
 const editReviewSchema = z.object({
   title: z
@@ -110,7 +111,7 @@ export const EditReviewPage = () => {
   };
 
   if (loading) {
-    return <div className={css.page}>Загрузка рецензии...</div>;
+    return <Spinner />;
   }
 
   if (getReviewError) {

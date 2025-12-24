@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import type { User } from '../api/types';
 import { login as apiLogin, register as apiRegister, getMe } from '../api/auth';
+import { Spinner } from '../components/Spinner';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, loading, register, login, logout }}>
-      {loading ? <p>Loading...</p> : children}
+      {loading ? <Spinner /> : children}
     </AuthContext.Provider>
   );
 };
