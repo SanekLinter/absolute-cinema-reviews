@@ -86,7 +86,7 @@ def get_public_reviews(
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {str(e)}")
 
 
 @router.get("/my", response_model=schemas.PaginatedMyReviewsResponse)
@@ -158,7 +158,7 @@ def get_my_reviews(
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {str(e)}")
 
 
 @router.get("/moderation", response_model=schemas.PaginatedReviewsResponse)
@@ -212,7 +212,7 @@ def get_moderation_reviews(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {str(e)}")
 
 
 @router.get("/{review_id}", response_model=schemas.DetailReviewResponse)
@@ -229,7 +229,7 @@ def get_review_detail(
     )
 
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
     is_author = current_user and current_user.id == review.user_id
     is_admin = current_user and current_user.role == "admin"
@@ -255,7 +255,7 @@ def get_review_detail(
             )
         )
     else:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
 
 @router.post("/", response_model=schemas.ReviewCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -309,10 +309,10 @@ def reject_review(
 ):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
     if review.status != "pending":
-        raise HTTPException(status_code=400, detail="Review has already been processed")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Review has already been processed")
 
     review.status = "rejected"
     db.commit()
@@ -328,11 +328,11 @@ def delete_review(
 ):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
     if review.user_id != current_user.id:
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Access is denied: you can only delete your own reviews"
         )
 
@@ -351,11 +351,11 @@ def edit_review(
 ):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
     if review.user_id != current_user.id:
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Access is denied: you can only delete your own reviews"
         )
 
@@ -378,7 +378,12 @@ def edit_review(
             id=current_user.id,
             username=current_user.username
         ),
-        created_at=review.created_at
+        created_at=review.created_at,
+        is_liked=(
+            db.query(models.Like)
+            .filter_by(review_id=review.id, user_id=current_user.id)
+            .first() is not None
+        )
     )
 
 
@@ -390,10 +395,10 @@ def toggle_like(
 ):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
 
     if review.status != "approved":
-        raise HTTPException(status_code=400, detail="You can only like approved reviews")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You can only like approved reviews")
 
     existing_like = db.query(models.Like).filter(
         models.Like.review_id == review_id,

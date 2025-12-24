@@ -6,8 +6,12 @@ from dependencies import create_access_token, get_current_user
 
 router = APIRouter(tags=["auth"])
 
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
+def register_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(database.get_db)
+):
     existing_user = db.query(models.User).filter(models.User.username == user_in.username).first()
     if existing_user:
         raise HTTPException(
@@ -31,8 +35,12 @@ def register_user(user_in: schemas.UserCreate, db: Session = Depends(database.ge
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @router.post("/login")
-def login_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
+def login_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(database.get_db)
+):
     user = db.query(models.User).filter(models.User.username == user_in.username).first()
     if not user or not verify_password(user_in.password, user.password_hash):
         raise HTTPException(
@@ -45,10 +53,13 @@ def login_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_d
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @router.get("/me", response_model=schemas.UserOut)
-def get_current_user_info(current_user: models.User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "role": current_user.role
-    }
+def get_current_user_info(
+    current_user: models.User = Depends(get_current_user)
+):
+    return schemas.UserOut(
+        id=current_user.id,
+        username=current_user.username,
+        role=current_user.role
+    )
