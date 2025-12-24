@@ -3,6 +3,7 @@ import type { Review } from '../../api/types';
 import { ReviewList } from '../ReviewList';
 import { Button } from '../Button';
 import { Alert } from '../Alert';
+import { Spinner } from '../Spinner';
 import css from './index.module.scss';
 
 type SortOption = 'date_desc' | 'date_asc' | 'likes_desc';
@@ -128,14 +129,10 @@ export const ReviewFeed = ({
 
       {error ? (
         <Alert>{error}</Alert>
+      ) : loading ? (
+        <Spinner />
       ) : (
-        !loading && (
-          <ReviewList
-            reviews={reviews}
-            cardProps={reviewCardProps}
-            onLikeUpdate={handleLikeUpdate}
-          />
-        )
+        <ReviewList reviews={reviews} cardProps={reviewCardProps} onLikeUpdate={handleLikeUpdate} />
       )}
 
       {totalPages > 1 && (

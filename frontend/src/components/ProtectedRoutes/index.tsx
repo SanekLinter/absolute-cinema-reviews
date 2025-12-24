@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import * as routes from '../../lib/routes';
 import { useAuth } from '../../context/AuthContext';
+import { Spinner } from '../Spinner';
 
 interface RequireAuthProps {
   children?: React.ReactNode;
@@ -10,7 +11,7 @@ export const RequireAuth = ({ children }: RequireAuthProps) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return null;
+    return <Spinner />;
   }
 
   if (!isAuthenticated) {
@@ -28,7 +29,7 @@ export const RequireAdmin = ({ children }: RequireAdminProps) => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
-    return null;
+    return <Spinner />;
   }
 
   if (!isAuthenticated) {

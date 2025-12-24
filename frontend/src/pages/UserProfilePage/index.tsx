@@ -5,6 +5,7 @@ import { getPublicReviews } from '../../api/reviews';
 import { getUserById } from '../../api/users';
 import type { UserBase } from '../../api/types';
 import { Alert } from '../../components/Alert';
+import { Spinner } from '../../components/Spinner';
 import css from './index.module.scss';
 
 export const UserProfilePage = () => {
@@ -37,7 +38,7 @@ export const UserProfilePage = () => {
   }, [userIdNumber]);
 
   if (loading) {
-    return null;
+    return <Spinner />;
   }
 
   return (
