@@ -30,7 +30,7 @@ class ReviewBase(BaseModel):
     content: str
     likes: int
     created_at: datetime
-    is_liked: Optional[bool]
+    is_liked: Optional[bool] = Field(None)
 
 
 class ReviewCreate(BaseModel):
@@ -45,16 +45,10 @@ class ReviewCreateResponse(BaseModel):
 
 class ReviewResponse(ReviewBase):
     author: UserBase
-    
-    class Config:
-        from_attributes = True
 
 
 class MyReviewResponse(ReviewBase):
     status: str
-
-    class Config:
-        from_attributes = True
 
 
 class DetailReviewResponse(ReviewBase):
@@ -84,10 +78,12 @@ class PaginationParams(BaseModel):
     limit: int = Field(20, ge=1, le=100)
     sort: Literal["created_at", "likes"] = Field("created_at")
     order: Literal["asc", "desc"] = Field("desc")
-    search: Optional[str] = Field(None, min_length=2, max_length=50)
+    search: Optional[str] = Field(None, min_length=1, max_length=50)
+
 
 class PublicPaginationParams(PaginationParams):
     author_id: Optional[int] = Field(None)
+
 
 class LikeToggleResponse(BaseModel):
     likes: int = Field(..., ge=0)
