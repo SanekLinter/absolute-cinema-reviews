@@ -4,6 +4,14 @@
   background: $my-white;
   border-radius: 5px;
   padding: 10px 20px 10px;
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 
   .status {
     margin-left: auto;
@@ -18,19 +26,33 @@
     font-weight: 600;
     color: $black;
     text-align: center;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    max-width: 100%;
+    line-height: 1;
+    margin-bottom: 3px;
   }
 
   .meta {
     margin-left: 10px;
     font-size: 1.1rem;
     font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
 
     .movie {
       display: flex;
-      align-items: center;
       gap: 5px;
       color: $black;
-
+      p {
+        margin: 0;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        hyphens: auto;
+        white-space: normal;
+      }
       .movieIcon {
         height: 22px;
         width: auto;
