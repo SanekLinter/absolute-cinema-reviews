@@ -78,7 +78,7 @@ class PaginationParams(BaseModel):
     limit: int = Field(20, ge=1, le=100)
     sort: Literal["created_at", "likes"] = Field("created_at")
     order: Literal["asc", "desc"] = Field("desc")
-    search: Optional[str] = Field(None, min_length=1, max_length=50)
+    search: Optional[str] = Field(None, min_length=2, max_length=50)
 
 
 class PublicPaginationParams(PaginationParams):
