@@ -6,4 +6,4 @@ venv/
 .gitignore
 README.md
 Dockerfile
-.dockerignore
+.dockerignores

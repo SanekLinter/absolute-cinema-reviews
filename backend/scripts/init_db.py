@@ -1,9 +1,10 @@
 import os
-import models, database
-from utils import hash_password
+from app.db.session import SessionLocal
+import app.db.models as models
+from app.utils.security import hash_password
 
 def create_initial_admin():
-    db = database.SessionLocal()
+    db = SessionLocal()
     try:
         admin_username = os.getenv("ADMIN_USERNAME", "Admin")
         admin_password = os.getenv("ADMIN_PASSWORD", "5tr0ng(pa55w0rd)")
