@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, func, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import expression
-from database import Base
 import enum
+from app.db.base import Base
 
 
 class Role(enum.StrEnum):
@@ -21,7 +20,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
-    password_hash = Column(String(64), nullable=False)
+    password_hash = Column(String(255), nullable=False)
     role = Column(Enum(Role), nullable=False, default=Role.USER)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -38,15 +37,22 @@ class Review(Base):
     movie_title = Column(String(100), nullable=False)
     content = Column(Text, nullable=False)
     status = Column(Enum(ReviewStatus), nullable=False, default=ReviewStatus.PENDING)
-    likes = Column(Integer, nullable=False, server_default=expression.text("0"), default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    likes = Column(Integer, nullable=False, default=0)
 
     author = relationship("User", back_populates="reviews")
-    likes_relation = relationship("Like", back_populates="review", cascade="all, delete-orphan")
+    user_likes = relationship("Like", back_populates="review", cascade="all, delete-orphan")
+    
+    #@property
+    #def likes_count(self):
+    #    return len(self.user_likes) if self.user_likes else 0
 
 
 class Like(Base):
     __tablename__ = "likes"
+    __table_args__ = (
+        UniqueConstraint('user_id', 'review_id', name='uq_user_review'),
+    )
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -54,4 +60,4 @@ class Like(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="likes")
-    review = relationship("Review", back_populates="likes_relation")
+    review = relationship("Review", back_populates="user_likes")
