@@ -1,4 +1,5 @@
-import { render, waitFor, screen, act } from '@testing-library/react';
+import { render, waitFor, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockLoadReviews = vi.hoisted(() => vi.fn());
@@ -11,10 +12,8 @@ vi.mock('../ReviewList', () => ({ ReviewList: mockReviewList }));
 vi.mock('../Button', () => ({ Button: mockButton }));
 vi.mock('../Alert', () => ({ Alert: mockAlert }));
 vi.mock('../Spinner', () => ({ Spinner: mockSpinner }));
-
 vi.mock('./index.module.scss', () => ({ default: {} }));
 
-// импорт компонента после моков
 import { ReviewFeed } from './index';
 
 describe('ReviewFeed - Module Test', () => {
@@ -23,14 +22,16 @@ describe('ReviewFeed - Module Test', () => {
 
     mockLoadReviews.mockResolvedValue({ reviews: [], pagination: { total_pages: 1 } });
 
-    // Моки компонентов должны возвращать валидный React элемент
     mockReviewList.mockImplementation(() => <div data-testid="review-list">ReviewList Mock</div>);
+
     mockButton.mockImplementation(({ onClick, children, loading }: any) => (
-      <button onClick={onClick} disabled={loading} data-testid="button">
+      <button onClick={onClick} disabled={loading}>
         {children}
       </button>
     ));
+
     mockAlert.mockImplementation(({ children }: any) => <div data-testid="alert">{children}</div>);
+
     mockSpinner.mockImplementation(() => <div data-testid="spinner">Spinner Mock</div>);
   });
 
@@ -162,42 +163,42 @@ describe('ReviewFeed - Module Test', () => {
       });
     });
     it('меняет страницу при клике на кнопки', async () => {
+      const user = userEvent.setup();
+
       render(<ReviewFeed loadReviews={mockLoadReviews} />);
 
       await waitFor(() => {
         expect(mockLoadReviews).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
       });
 
-      const buttonCalls = mockButton.mock.calls;
-      const nextButtonCall = buttonCalls.find((call: any) => call[0]?.children === '➡');
+      const nextButton = await screen.findByRole('button', {
+        name: '➡',
+      });
 
-      if (nextButtonCall && nextButtonCall[0]?.onClick) {
-        nextButtonCall[0].onClick();
+      await user.click(nextButton);
 
-        await waitFor(() => {
-          expect(mockLoadReviews).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }));
-        });
-      }
+      await waitFor(() => {
+        expect(mockLoadReviews).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }));
+      });
     });
 
     it('блокирует кнопки пагинации при loading', async () => {
       render(<ReviewFeed loadReviews={mockLoadReviews} />);
 
-      await waitFor(() => {
-        const buttonCalls = mockButton.mock.calls;
-        const paginationButtons = buttonCalls.filter(
-          (call: any) => call[0]?.children === '➡' || call[0]?.children === '⬅'
-        );
+      const nextButton = await screen.findByRole('button', {
+        name: '➡',
+      });
 
-        paginationButtons.forEach((call: any) => {
-          expect(call[0].loading).toBe(false); // После загрузки loading=false
-        });
+      await waitFor(() => {
+        expect(nextButton).not.toBeDisabled();
       });
     });
   });
 
   describe('логика handleLikeUpdate', () => {
     it('обновляет лайки в reviews', async () => {
+      const user = userEvent.setup();
+
       const mockReviews = [
         {
           id: 1,
@@ -209,7 +210,7 @@ describe('ReviewFeed - Module Test', () => {
           created_at: '2024-01-01',
           status: 'approved',
           author: { id: 1, username: 'user1' },
-        } as any,
+        },
       ];
 
       mockLoadReviews.mockResolvedValue({
@@ -217,42 +218,51 @@ describe('ReviewFeed - Module Test', () => {
         pagination: { total_pages: 1 },
       });
 
-      let likeUpdateHandler: any;
-      mockReviewList.mockImplementation(({ onLikeUpdate }: any) => {
-        likeUpdateHandler = onLikeUpdate;
-        return <div data-testid="review-list">ReviewList</div>;
+      // Мокаем ReviewList с защитой от undefined
+      mockReviewList.mockImplementation(({ reviews = [], onLikeUpdate }) => {
+        if (reviews.length === 0) {
+          return <div data-testid="review-list">Пустой список</div>;
+        }
+
+        const review = reviews[0];
+
+        return (
+          <div data-testid="review-list">
+            <button
+              data-testid="like-button"
+              onClick={() => onLikeUpdate(review.id, review.likes + 1, !review.is_liked)}
+            >
+              Like ({review.likes})
+            </button>
+          </div>
+        );
       });
 
-      await act(async () => {
-        render(<ReviewFeed loadReviews={mockLoadReviews} />);
-      });
+      render(<ReviewFeed loadReviews={mockLoadReviews} />);
 
+      // Ждём, пока данные загрузятся и ReviewList отрендерится с реальными отзывами
       await waitFor(() => {
-        expect(likeUpdateHandler).toBeDefined();
+        expect(screen.getByTestId('review-list')).toBeInTheDocument();
+        expect(screen.getByTestId('like-button')).toBeInTheDocument();
       });
 
-      // Вызываем обработчик обновления лайков
-      if (likeUpdateHandler) {
-        await act(async () => {
-          likeUpdateHandler(1, 11, true);
-        });
+      const likeButton = screen.getByTestId('like-button');
+      expect(likeButton).toHaveTextContent('Like (10)');
 
-        // Ждем обновления и проверяем последний вызов ReviewList
-        await waitFor(() => {
-          const calls = mockReviewList.mock.calls;
-          expect(calls.length).toBeGreaterThan(1);
+      await user.click(likeButton);
 
-          // Ищем вызов с обновленными данными
-          const lastCall = calls[calls.length - 1];
-          const reviewsArg = lastCall[0].reviews;
-          const updatedReview = reviewsArg.find((r: any) => r.id === 1);
+      // Ждём перерендера ReviewList с обновлёнными данными
+      await waitFor(() => {
+        const calls = mockReviewList.mock.calls;
+        const lastCallArgs = calls[calls.length - 1][0];
+        const updatedReview = lastCallArgs.reviews.find((r: { id: number }) => r.id === 1);
 
-          if (updatedReview) {
-            expect(updatedReview.likes).toBe(11);
-            expect(updatedReview.is_liked).toBe(true);
-          }
-        });
-      }
+        expect(updatedReview).toBeDefined();
+        expect(updatedReview.likes).toBe(11);
+        expect(updatedReview.is_liked).toBe(true);
+      });
+
+      expect(screen.getByTestId('like-button')).toHaveTextContent('Like (11)');
     });
   });
 });
