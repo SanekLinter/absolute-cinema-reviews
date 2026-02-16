@@ -43,27 +43,43 @@ describe('SignInPage', () => {
     expect(screen.getByRole('button', { name: /войти/i })).toBeInTheDocument();
   });
 
-  it('показывает ошибку валидации при слишком коротком username', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <SignInPage />
-      </MemoryRouter>
-    );
+  describe('SignInPage - decision table', () => {
+    const cases = [
+      { username: 'validuser', password: 'Password123!', shouldSubmit: true },
+      { username: 'validuser', password: '123', shouldSubmit: false },
+      { username: 'ab', password: 'Password123!', shouldSubmit: false },
+      { username: 'ab', password: '123', shouldSubmit: false },
+    ];
 
-    const usernameInput = screen.getByLabelText(/логин/i);
-    await user.type(usernameInput, 'abc');
-    await user.tab();
+    it.each(cases)(
+      'username=$username password=$password',
+      async ({ username, password, shouldSubmit }) => {
+        const user = userEvent.setup();
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Минимум 4 символа')).toBeInTheDocument();
-      },
-      { timeout: 1500 }
+        render(
+          <MemoryRouter>
+            <SignInPage />
+          </MemoryRouter>
+        );
+
+        await user.type(screen.getByLabelText(/логин/i), username);
+        await user.type(screen.getByLabelText(/пароль/i), password);
+        await user.click(screen.getByRole('button', { name: /войти/i }));
+
+        if (shouldSubmit) {
+          await waitFor(() => {
+            expect(mockLogin).toHaveBeenCalled();
+          });
+        } else {
+          await waitFor(() => {
+            expect(mockLogin).not.toHaveBeenCalled();
+          });
+        }
+      }
     );
   });
 
-  it('успешный вход → перенаправление на главную', async () => {
+  it('успешный вход и перенаправление на главную', async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>

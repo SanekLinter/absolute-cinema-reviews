@@ -35,59 +35,52 @@ vi.mock('./index.module.scss', () => ({
 
 import { Navbar } from './index';
 
-describe('Navbar (модульный тест)', () => {
+describe('Navbar (decision table)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('показывает ссылки на Вход и Регистрация если не авторизован', () => {
+  const cases = [
+    {
+      name: 'не авторизован → показывает Вход и Регистрация',
+      auth: { user: null, isAuthenticated: false },
+      expectation: 'guest',
+    },
+    {
+      name: 'user → username + Выйти',
+      auth: { user: { username: 'test', role: 'user' }, isAuthenticated: true },
+      expectation: 'user',
+    },
+    {
+      name: 'admin → показывает admin ссылку',
+      auth: { user: { username: 'admin', role: 'admin' }, isAuthenticated: true },
+      expectation: 'admin',
+    },
+  ];
+
+  it.each(cases)('$name', ({ auth, expectation }) => {
     mockUseAuth.mockReturnValue({
-      user: null,
-      isAuthenticated: false,
+      ...auth,
       logout: mockLogout,
     });
 
     render(<Navbar />);
 
-    expect(screen.getByText('Вход')).toBeInTheDocument();
-    expect(screen.getByText('Регистрация')).toBeInTheDocument();
-  });
+    if (expectation === 'guest') {
+      expect(screen.getByText('Вход')).toBeInTheDocument();
+      expect(screen.getByText('Регистрация')).toBeInTheDocument();
+    }
 
-  it('показывает username и кнопку Выйти для обычного пользователя', () => {
-    mockUseAuth.mockReturnValue({
-      user: { username: 'test', role: 'user' },
-      isAuthenticated: true,
-      logout: mockLogout,
-    });
+    if (expectation === 'user') {
+      expect(screen.getByText('test')).toBeInTheDocument();
+      expect(screen.getByText('Выйти')).toBeInTheDocument();
+      expect(screen.queryByText('Рецензии на модерации')).not.toBeInTheDocument();
+    }
 
-    render(<Navbar />);
-
-    expect(screen.getByText('test')).toBeInTheDocument();
-    expect(screen.getByText('Выйти')).toBeInTheDocument();
-  });
-
-  it('не показывает админскую ссылку для обычного пользователя', () => {
-    mockUseAuth.mockReturnValue({
-      user: { username: 'test', role: 'user' },
-      isAuthenticated: true,
-      logout: mockLogout,
-    });
-
-    render(<Navbar />);
-
-    expect(screen.queryByText('Рецензии на модерации')).not.toBeInTheDocument();
-  });
-
-  it('показывает админскую ссылку для admin', () => {
-    mockUseAuth.mockReturnValue({
-      user: { username: 'admin', role: 'admin' },
-      isAuthenticated: true,
-      logout: mockLogout,
-    });
-
-    render(<Navbar />);
-
-    expect(screen.getByText('Рецензии на модерации')).toBeInTheDocument();
+    if (expectation === 'admin') {
+      expect(screen.getByText('admin')).toBeInTheDocument();
+      expect(screen.getByText('Рецензии на модерации')).toBeInTheDocument();
+    }
   });
 
   it('вызывает logout и navigate при клике Выйти', () => {

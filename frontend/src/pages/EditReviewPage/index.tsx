@@ -132,10 +132,16 @@ export const EditReviewPage = () => {
           error={errors.movie_title?.message}
           {...register('movie_title')}
         />
-
         <div className={css.textareaWrapper}>
-          <label className={css.textareaLabel}>Текст рецензии</label>
-          <textarea className={css.textarea} rows={12} {...register('content')} />
+          <label htmlFor="review-content" className={css.textareaLabel}>
+            Текст рецензии
+          </label>
+          <textarea
+            id="review-content"
+            className={css.textarea}
+            rows={12}
+            {...register('content')}
+          />
           {errors.content && <div className={css.textareaError}>{errors.content.message}</div>}
           <div className={css.counter}>{contentValue?.length || 0} / 5000</div>
         </div>

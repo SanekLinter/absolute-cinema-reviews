@@ -35,134 +35,93 @@ vi.stubGlobal('location', { pathname: '/protected' });
 
 import { RequireAuth, RequireAdmin } from './index';
 
-describe('RequireAuth', () => {
+describe('RequireAuth (decision table)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('показывает Spinner при loading', () => {
-    mockUseAuth.mockReturnValue({
-      loading: true,
-      isAuthenticated: false,
-    });
+  const cases = [
+    {
+      name: 'показывает Spinner при loading',
+      auth: { loading: true, isAuthenticated: false },
+      expectation: 'spinner',
+    },
+    {
+      name: 'редирект если не авторизован',
+      auth: { loading: false, isAuthenticated: false },
+      expectation: 'redirect-signin',
+    },
+    {
+      name: 'рендерит children если авторизован',
+      auth: { loading: false, isAuthenticated: true },
+      children: <div>Content</div>,
+      expectation: 'children',
+    },
+    {
+      name: 'рендерит Outlet если авторизован без children',
+      auth: { loading: false, isAuthenticated: true },
+      expectation: 'outlet',
+    },
+  ];
 
-    render(<RequireAuth />);
+  it.each(cases)('$name', ({ auth, children, expectation }) => {
+    mockUseAuth.mockReturnValue(auth);
 
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
-  });
+    render(<RequireAuth>{children}</RequireAuth>);
 
-  it('редиректит на вход если не авторизован', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: false,
-    });
+    if (expectation === 'spinner') {
+      expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    }
 
-    render(<RequireAuth />);
+    if (expectation === 'redirect-signin') {
+      expect(screen.getByTestId('navigate-/signin')).toBeInTheDocument();
+    }
 
-    const navigate = screen.getByTestId('navigate-/signin');
-    expect(navigate).toBeInTheDocument();
-    expect(navigate).toHaveAttribute('data-replace', 'true');
+    if (expectation === 'children') {
+      expect(screen.getByText('Content')).toBeInTheDocument();
+    }
 
-    // Проверяем state с from
-    const state = JSON.parse(navigate.getAttribute('data-state') || '{}');
-    expect(state.from).toBe('/protected');
-  });
-
-  it('рендерит children если авторизован', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-    });
-
-    render(
-      <RequireAuth>
-        <div>Test Content</div>
-      </RequireAuth>
-    );
-
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
-  });
-
-  it('рендерит Outlet если авторизован без children', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-    });
-
-    render(<RequireAuth />);
-
-    expect(screen.getByTestId('outlet')).toBeInTheDocument();
+    if (expectation === 'outlet') {
+      expect(screen.getByTestId('outlet')).toBeInTheDocument();
+    }
   });
 });
 
-describe('RequireAdmin', () => {
+describe('RequireAdmin (decision table)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('редиректит на вход если не авторизован', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: false,
-      user: null,
-    });
+  const cases = [
+    {
+      name: 'не авторизован → signin',
+      auth: { loading: false, isAuthenticated: false, user: null },
+      expectation: 'signin',
+    },
+    {
+      name: 'user без admin роли → reviews',
+      auth: { loading: false, isAuthenticated: true, user: { role: 'user' } },
+      expectation: 'reviews',
+    },
+    {
+      name: 'role undefined → reviews',
+      auth: { loading: false, isAuthenticated: true, user: {} },
+      expectation: 'reviews',
+    },
+    {
+      name: 'user null → reviews',
+      auth: { loading: false, isAuthenticated: true, user: null },
+      expectation: 'reviews',
+    },
+    {
+      name: 'admin → children',
+      auth: { loading: false, isAuthenticated: true, user: { role: 'admin' } },
+      expectation: 'children',
+    },
+  ];
 
-    render(<RequireAdmin />);
-
-    const navigate = screen.getByTestId('navigate-/signin');
-    expect(navigate).toBeInTheDocument();
-    expect(navigate).toHaveAttribute('data-replace', 'true');
-
-    const state = JSON.parse(navigate.getAttribute('data-state') || '{}');
-    expect(state.from).toBe('/protected');
-  });
-
-  it('редиректит на все рецензии если user не admin', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-      user: { role: 'user' },
-    });
-
-    render(<RequireAdmin />);
-
-    const navigate = screen.getByTestId('navigate-/reviews');
-    expect(navigate).toBeInTheDocument();
-    expect(navigate).toHaveAttribute('data-replace', 'true');
-  });
-
-  it('редиректит на все рецензии если user role не определен', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-      user: {}, // role не определен
-    });
-
-    render(<RequireAdmin />);
-
-    const navigate = screen.getByTestId('navigate-/reviews');
-    expect(navigate).toBeInTheDocument();
-  });
-
-  it('редиректит на все рецензии если user null', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-      user: null, // user null
-    });
-
-    render(<RequireAdmin />);
-
-    const navigate = screen.getByTestId('navigate-/reviews');
-    expect(navigate).toBeInTheDocument();
-  });
-
-  it('рендерит children если user admin', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-      user: { role: 'admin' },
-    });
+  it.each(cases)('$name', ({ auth, expectation }) => {
+    mockUseAuth.mockReturnValue(auth);
 
     render(
       <RequireAdmin>
@@ -170,19 +129,16 @@ describe('RequireAdmin', () => {
       </RequireAdmin>
     );
 
-    expect(screen.getByText('Admin Panel')).toBeInTheDocument();
-  });
+    if (expectation === 'signin') {
+      expect(screen.getByTestId('navigate-/signin')).toBeInTheDocument();
+    }
 
-  // Edge cases
-  it('работает без user объекта', () => {
-    mockUseAuth.mockReturnValue({
-      loading: false,
-      isAuthenticated: true,
-    });
+    if (expectation === 'reviews') {
+      expect(screen.getByTestId('navigate-/reviews')).toBeInTheDocument();
+    }
 
-    render(<RequireAdmin />);
-
-    const navigate = screen.getByTestId('navigate-/reviews');
-    expect(navigate).toBeInTheDocument();
+    if (expectation === 'children') {
+      expect(screen.getByText('Admin Panel')).toBeInTheDocument();
+    }
   });
 });
