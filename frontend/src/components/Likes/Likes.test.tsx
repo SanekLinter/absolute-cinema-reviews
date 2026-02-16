@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('../../api/reviews', () => {
@@ -19,6 +19,7 @@ vi.mock('../Alert', () => ({
 import { Likes } from './index';
 import * as ReviewsAPI from '../../api/reviews';
 import * as AuthContext from '../../context/AuthContext';
+import userEvent from '@testing-library/user-event';
 
 describe('Likes - Module Test', () => {
   beforeEach(() => {
@@ -77,16 +78,18 @@ describe('Likes - Module Test', () => {
   });
 
   describe('обработка кликов', () => {
-    it('не вызывает handleToggle при клике без авторизации', () => {
+    it('не вызывает handleToggle при клике без авторизации', async () => {
       (AuthContext.useAuth as any).mockReturnValue({ isAuthenticated: false, user: null });
       render(<Likes reviewId={1} likes={5} isLiked={false} />);
-      fireEvent.click(screen.getByRole('button'));
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button'));
       expect(ReviewsAPI.toggleLike).not.toHaveBeenCalled();
     });
 
-    it('вызывает handleToggle при клике с авторизацией', () => {
+    it('вызывает handleToggle при клике с авторизацией', async () => {
       render(<Likes reviewId={1} likes={5} isLiked={false} />);
-      fireEvent.click(screen.getByRole('button'));
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button'));
       expect(ReviewsAPI.toggleLike).toHaveBeenCalledWith(1);
     });
   });

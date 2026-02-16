@@ -29,7 +29,9 @@ describe('UserProfilePage', () => {
     vi.clearAllMocks();
   });
 
-  it('показывает спиннер при загрузке', () => {
+  it('показывает спиннер при загрузке', async () => {
+    vi.mocked(apiUsers.getUserById).mockImplementation(() => new Promise(() => {}));
+
     render(
       <MemoryRouter initialEntries={['/user/1']}>
         <Routes>
@@ -38,6 +40,7 @@ describe('UserProfilePage', () => {
       </MemoryRouter>
     );
 
+    await screen.findByText('Loading...');
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 

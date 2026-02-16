@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -28,17 +28,8 @@ vi.mock('../../context/AuthContext', () => ({
   useMe: vi.fn(),
 }));
 
-const mockCurrentUser: User = {
-  id: 10,
-  username: 'testuser',
-  role: 'user',
-};
-
-const mockAnotherUser: User = {
-  id: 999,
-  username: 'another',
-  role: 'user',
-};
+const mockCurrentUser: User = { id: 10, username: 'testuser', role: 'user' };
+const mockAnotherUser: User = { id: 999, username: 'another', role: 'user' };
 
 const mockReview = {
   id: 42,
@@ -48,10 +39,14 @@ const mockReview = {
   author: { id: 10 },
 };
 
-async function userAct(user: ReturnType<typeof userEvent.setup>, fn: () => Promise<void>) {
-  await act(async () => {
-    await fn();
-  });
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/reviews/42/edit']}>
+      <Routes>
+        <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
 }
 
 describe('EditReviewPage', () => {
@@ -63,20 +58,13 @@ describe('EditReviewPage', () => {
 
     vi.mocked(reviewsApi.getReviewById).mockImplementation(mockGetReviewById);
     vi.mocked(reviewsApi.updateReview).mockImplementation(mockUpdateReview);
-
     vi.mocked(AuthContext.useMe).mockReturnValue(mockCurrentUser);
   });
 
   it('показывает спиннер при загрузке рецензии', async () => {
-    mockGetReviewById.mockImplementation(() => new Promise(() => {})); // зависание
+    mockGetReviewById.mockImplementation(() => new Promise(() => {}));
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       const spinner = document.querySelector('[class*="_spinner"]');
@@ -84,16 +72,10 @@ describe('EditReviewPage', () => {
     });
   });
 
-  it('показывает ошибку, если рецензия не найдена или нет прав', async () => {
+  it('показывает ошибку, если рецензия не найдена', async () => {
     mockGetReviewById.mockRejectedValueOnce({ uiMessage: 'Рецензия не найдена' });
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText('Рецензия не найдена')).toBeInTheDocument();
@@ -102,16 +84,9 @@ describe('EditReviewPage', () => {
 
   it('показывает ошибку, если пользователь не автор рецензии', async () => {
     vi.mocked(AuthContext.useMe).mockReturnValue(mockAnotherUser);
-
     mockGetReviewById.mockResolvedValueOnce(mockReview);
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(
@@ -122,28 +97,19 @@ describe('EditReviewPage', () => {
 
   it('предзаполняет форму данными рецензии и позволяет редактировать', async () => {
     const user = userEvent.setup();
-
     mockGetReviewById.mockResolvedValueOnce(mockReview);
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Старый заголовок')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Старый фильм')).toBeInTheDocument();
     });
 
-    const contentTextarea = screen.getByRole('textbox', { name: '' });
+    const contentTextarea = screen.getByLabelText(/текст рецензии/i);
     const initialLength = mockReview.content.length;
 
-    await userAct(user, async () => {
-      await user.type(contentTextarea, ' Дополнение!!!');
-    });
+    await user.type(contentTextarea, ' Дополнение!!!');
 
     await waitFor(() => {
       const expectedLength = initialLength + ' Дополнение!!!'.length;
@@ -151,39 +117,28 @@ describe('EditReviewPage', () => {
     });
 
     const titleInput = screen.getByDisplayValue('Старый заголовок');
-    await userAct(user, async () => {
-      await user.clear(titleInput);
-      await user.type(titleInput, 'Новый заголовок 2026');
-    });
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Новый заголовок 2026');
   });
 
   it('успешно обновляет рецензию и перенаправляет', async () => {
     const user = userEvent.setup();
-
     mockGetReviewById.mockResolvedValueOnce(mockReview);
     mockUpdateReview.mockResolvedValueOnce({ id: 42 });
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Старый заголовок')).toBeInTheDocument();
     });
 
-    await userAct(user, async () => {
-      await user.clear(screen.getByLabelText(/заголовок рецензии/i));
-      await user.type(screen.getByLabelText(/заголовок рецензии/i), 'Обновлённый заголовок');
+    await user.clear(screen.getByLabelText(/заголовок рецензии/i));
+    await user.type(screen.getByLabelText(/заголовок рецензии/i), 'Обновлённый заголовок');
 
-      await user.clear(screen.getByLabelText(/название фильма/i));
-      await user.type(screen.getByLabelText(/название фильма/i), 'Обновлённый фильм');
+    await user.clear(screen.getByLabelText(/название фильма/i));
+    await user.type(screen.getByLabelText(/название фильма/i), 'Обновлённый фильм');
 
-      await user.click(screen.getByRole('button', { name: /отправить на модерацию/i }));
-    });
+    await user.click(screen.getByRole('button', { name: /отправить на модерацию/i }));
 
     await waitFor(() => {
       expect(mockUpdateReview).toHaveBeenCalledWith(
@@ -198,32 +153,125 @@ describe('EditReviewPage', () => {
 
   it('показывает серверную ошибку при неудачном обновлении', async () => {
     const user = userEvent.setup();
-
     mockGetReviewById.mockResolvedValueOnce(mockReview);
     mockUpdateReview.mockRejectedValueOnce({ uiMessage: 'Не удалось обновить' });
 
-    render(
-      <MemoryRouter initialEntries={['/reviews/42/edit']}>
-        <Routes>
-          <Route path="/reviews/:reviewId/edit" element={<EditReviewPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
-    // Ждём появления кнопки "Отправить на модерацию"
     const submitButton = await screen.findByRole('button', {
       name: /отправить на модерацию/i,
     });
 
-    // Клик через act
-    await act(async () => {
-      await user.click(submitButton);
-    });
+    await user.click(submitButton);
 
-    // Ждём появления ошибки
     await waitFor(() => {
       expect(screen.getByText('Не удалось обновить')).toBeInTheDocument();
       expect(mockNavigate).not.toHaveBeenCalled();
     });
+  });
+
+  describe('EditReviewPage - pairwise combinations', () => {
+    const validTitle = 'Корректный заголовок';
+    const invalidTitle = 'abc';
+    const validContent = 'a'.repeat(150);
+    const invalidContent = 'a'.repeat(50);
+    const validMovie = 'Интерстеллар';
+    const invalidMovie = '';
+
+    const authorUser = { id: 10, username: 'username', role: 'user' as 'user' | 'admin' };
+    const notAuthorUser = { id: 99, username: 'username', role: 'user' as 'user' | 'admin' };
+
+    const cases = [
+      {
+        title: validTitle,
+        content: validContent,
+        movie: validMovie,
+        user: authorUser,
+        shouldSubmit: true,
+      },
+      {
+        title: validTitle,
+        content: invalidContent,
+        movie: invalidMovie,
+        user: notAuthorUser,
+        shouldSubmit: false,
+      },
+      {
+        title: invalidTitle,
+        content: validContent,
+        movie: validMovie,
+        user: notAuthorUser,
+        shouldSubmit: false,
+      },
+      {
+        title: invalidTitle,
+        content: invalidContent,
+        movie: invalidMovie,
+        user: authorUser,
+        shouldSubmit: false,
+      },
+      {
+        title: validTitle,
+        content: validContent,
+        movie: invalidMovie,
+        user: authorUser,
+        shouldSubmit: false,
+      },
+      {
+        title: validTitle,
+        content: invalidContent,
+        movie: validMovie,
+        user: authorUser,
+        shouldSubmit: false,
+      },
+    ];
+
+    it.each(cases)(
+      'title:$title content:$content movie:$movie user:$user.id shouldSubmit:$shouldSubmit',
+      async ({ title, content, movie, user, shouldSubmit }) => {
+        vi.mocked(AuthContext.useMe).mockReturnValue(user);
+        const u = userEvent.setup();
+
+        mockGetReviewById.mockResolvedValueOnce(mockReview);
+
+        renderPage();
+
+        if (user.id === mockReview.author.id) {
+          // автор → ожидаем форму
+          await waitFor(() => {
+            expect(screen.getByDisplayValue('Старый заголовок')).toBeInTheDocument();
+          });
+
+          await u.clear(screen.getByLabelText(/заголовок рецензии/i));
+          await u.type(screen.getByLabelText(/заголовок рецензии/i), title);
+
+          await u.clear(screen.getByLabelText(/название фильма/i));
+          if (movie) {
+            await u.type(screen.getByLabelText(/название фильма/i), movie);
+          }
+
+          const contentTextarea = screen.getByLabelText(/текст рецензии/i);
+          await u.clear(contentTextarea);
+          await u.type(contentTextarea, content);
+
+          await u.click(screen.getByRole('button', { name: /отправить/i }));
+        } else {
+          // не автор → ожидаем ошибку доступа
+          await waitFor(() => {
+            expect(
+              screen.getByText('У вас нет прав на редактирование этой рецензии')
+            ).toBeInTheDocument();
+          });
+
+          expect(screen.queryByLabelText(/заголовок рецензии/i)).not.toBeInTheDocument();
+        }
+
+        if (shouldSubmit) {
+          await waitFor(() => expect(reviewsApi.updateReview).toHaveBeenCalled());
+        } else {
+          await waitFor(() => expect(reviewsApi.updateReview).not.toHaveBeenCalled());
+        }
+      }
+    );
   });
 });
