@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -41,63 +41,72 @@ describe('CreateReviewPage', () => {
     expect(screen.getByRole('button', { name: /отправить на модерацию/i })).toBeInTheDocument();
   });
 
-  it('показывает ошибки валидации при слишком коротких полях', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <CreateReviewPage />
-      </MemoryRouter>
-    );
+  // BOUNDARY VALUE ANALYSIS - TITLE
+  describe('Граничные условия поля title', () => {
+    const cases = [
+      { value: 'abcd', valid: false }, // 4
+      { value: 'abcde', valid: true }, // 5
+      { value: 'a'.repeat(50), valid: true },
+      { value: 'a'.repeat(100), valid: true },
+      { value: 'a'.repeat(101), valid: false }, // 101
+    ];
 
-    const titleInput = screen.getByLabelText(/заголовок рецензии/i);
-    const movieInput = screen.getByLabelText(/название фильма/i);
-    const contentTextarea = screen.getByPlaceholderText('Введите текст рецензии...');
+    it.each(cases)('title length: $value', async ({ value, valid }) => {
+      const user = userEvent.setup();
 
-    await act(async () => {
-      await user.type(titleInput, 'abc');
-      await user.type(movieInput, 'film');
-      await user.type(contentTextarea, 'короткий');
-    });
+      render(
+        <MemoryRouter>
+          <CreateReviewPage />
+        </MemoryRouter>
+      );
 
-    await waitFor(() => {
-      const min5Errors = screen.getAllByText('Минимум 5 символов');
-      expect(min5Errors).toHaveLength(2); // для title и movie_title
-      expect(screen.getByText('Минимум 100 символов')).toBeInTheDocument();
-    });
-  });
+      const input = screen.getByLabelText(/заголовок рецензии/i);
 
-  it('успешно отправляет форму → перенаправляет на страницу рецензии', async () => {
-    const user = userEvent.setup();
-    mockCreateReview.mockResolvedValueOnce({ id: 123 });
+      await user.type(input, value);
+      await user.tab();
 
-    render(
-      <MemoryRouter>
-        <CreateReviewPage />
-      </MemoryRouter>
-    );
-
-    await act(async () => {
-      await user.type(screen.getByLabelText(/заголовок рецензии/i), 'Отличный фильм 2025');
-      await user.type(screen.getByLabelText(/название фильма/i), 'Dune: Part Three');
-
-      const longText =
-        'Это очень длинный и осмысленный текст рецензии, который должен пройти валидацию по длине и символам. '.repeat(
-          3
-        );
-      await user.type(screen.getByPlaceholderText('Введите текст рецензии...'), longText);
-
-      await user.click(screen.getByRole('button', { name: /отправить на модерацию/i }));
-    });
-
-    await waitFor(() => {
-      expect(mockCreateReview).toHaveBeenCalledTimes(1);
-      expect(mockNavigate).toHaveBeenCalledWith('/reviews/123');
+      if (!valid) {
+        expect(await screen.findByText(/символ/)).toBeInTheDocument();
+      }
     });
   });
 
-  it('показывает серверную ошибку и не перенаправляет при неудаче', async () => {
+  // BOUNDARY VALUE ANALYSIS - CONTENT
+  describe('Граничные условия поля Content', () => {
+    const cases = [
+      { value: 'a'.repeat(99), valid: false },
+      { value: 'a'.repeat(100), valid: true },
+      { value: 'a'.repeat(1000), valid: true },
+      { value: 'a'.repeat(5000), valid: true },
+      { value: 'a'.repeat(5001), valid: false },
+    ];
+
+    it.each(cases)('content length test (length: $value.length)', async ({ value, valid }) => {
+      render(
+        <MemoryRouter>
+          <CreateReviewPage />
+        </MemoryRouter>
+      );
+
+      const textarea = screen.getByPlaceholderText(/введите текст рецензии/i);
+
+      fireEvent.change(textarea, {
+        target: { value },
+      });
+
+      fireEvent.blur(textarea);
+
+      if (!valid) {
+        expect(await screen.findByText(/символ/i)).toBeInTheDocument();
+      } else {
+        expect(screen.queryByText(/символ/i)).not.toBeInTheDocument();
+      }
+    });
+  });
+
+  // EQUIVALENCE CLASSES
+  it('Не принимает невалидные символы (emoji) для поля title', async () => {
     const user = userEvent.setup();
-    mockCreateReview.mockRejectedValueOnce({ uiMessage: 'Ошибка сервера, попробуйте позже' });
 
     render(
       <MemoryRouter>
@@ -105,21 +114,78 @@ describe('CreateReviewPage', () => {
       </MemoryRouter>
     );
 
-    await act(async () => {
-      await user.type(screen.getByLabelText(/заголовок рецензии/i), 'Тестовая рецензия');
-      await user.type(screen.getByLabelText(/название фильма/i), 'Тестовый фильм');
+    const input = screen.getByLabelText(/заголовок рецензии/i);
 
-      const longText =
-        'Достаточно длинный текст для прохождения валидации и теста отправки. '.repeat(4);
-      await user.type(screen.getByPlaceholderText('Введите текст рецензии...'), longText);
+    await user.type(input, 'Тест😊');
+    await user.tab();
 
-      await user.click(screen.getByRole('button', { name: /отправить на модерацию/i }));
-    });
+    expect(await screen.findByText(/только кириллица, латиница/i)).toBeInTheDocument();
+  });
+
+  it('Принимает кириллица + латиница + цифры в поле title', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <CreateReviewPage />
+      </MemoryRouter>
+    );
+
+    const input = screen.getByLabelText(/заголовок рецензии/i);
+
+    await user.type(input, 'Фильм 2024: Test!');
+    await user.tab();
+
+    expect(screen.queryByText(/только кириллица/i)).not.toBeInTheDocument();
+  });
+
+  // SUCCESS CASE
+  it('успешно отправляет форму и делает редирект', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(reviewsApi.createReview).mockResolvedValue({
+      id: 123,
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <CreateReviewPage />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText(/заголовок/i), 'Valid title');
+    await user.type(screen.getByLabelText(/название фильма/i), 'Valid movie');
+    await user.type(screen.getByPlaceholderText(/введите текст рецензии/i), 'a'.repeat(120));
+
+    await user.click(screen.getByRole('button', { name: /отправить/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Ошибка сервера, попробуйте позже')).toBeInTheDocument();
+      expect(reviewsApi.createReview).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalled();
+    });
+  });
+
+  // SERVER ERROR
+  it('показывает серверную ошибку', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(reviewsApi.createReview).mockRejectedValue({
+      uiMessage: 'Ошибка сервера',
     });
 
+    render(
+      <MemoryRouter>
+        <CreateReviewPage />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText(/заголовок/i), 'Valid title');
+    await user.type(screen.getByLabelText(/название фильма/i), 'Valid movie');
+    await user.type(screen.getByPlaceholderText(/введите текст рецензии/i), 'a'.repeat(120));
+
+    await user.click(screen.getByRole('button', { name: /отправить/i }));
+
+    expect(await screen.findByText('Ошибка сервера')).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

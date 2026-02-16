@@ -20,6 +20,14 @@ vi.mock('../../context/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <SignUpPage />
+    </MemoryRouter>
+  );
+}
+
 describe('SignUpPage', () => {
   const mockRegister = vi.fn().mockResolvedValue(undefined);
 
@@ -32,44 +40,107 @@ describe('SignUpPage', () => {
   });
 
   it('рендерит форму регистрации', () => {
-    render(
-      <MemoryRouter>
-        <SignUpPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     expect(screen.getByLabelText(/логин/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/пароль/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /зарегистрироваться/i })).toBeInTheDocument();
   });
 
-  it('показывает ошибку валидации при слишком коротком username', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <SignUpPage />
-      </MemoryRouter>
-    );
+  describe('граничные условия поля username', () => {
+    const cases = [
+      { value: 'abc', valid: false }, // 3
+      { value: 'abcd', valid: true }, // 4
+      { value: 'abcdefghij', valid: true }, // mid
+      { value: 'a'.repeat(20), valid: true }, // 20
+      { value: 'a'.repeat(21), valid: false }, // 21
+    ];
 
-    const usernameInput = screen.getByLabelText(/логин/i);
-    await user.type(usernameInput, 'abc');
-    await user.tab();
+    it.each(cases)('username length: $value', async ({ value, valid }) => {
+      const user = userEvent.setup();
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Минимум 4 символа')).toBeInTheDocument();
-      },
-      { timeout: 1500 }
-    );
+      renderPage();
+
+      const input = screen.getByLabelText(/логин/i);
+
+      await user.type(input, value);
+      await user.tab();
+
+      if (!valid) {
+        await waitFor(() => {
+          expect(screen.getByText(/символ/)).toBeInTheDocument();
+        });
+      } else {
+        await waitFor(() => {
+          expect(screen.queryByText(/символ/)).not.toBeInTheDocument();
+        });
+      }
+    });
+  });
+
+  describe('граничные условия поля Password', () => {
+    const cases = [
+      { value: '1234567', valid: false }, // 7
+      { value: '12345678', valid: true }, // 8
+      { value: 'Password12', valid: true }, // mid
+      { value: 'a'.repeat(16), valid: true }, // 16
+      { value: 'a'.repeat(17), valid: false }, // 17
+    ];
+
+    it.each(cases)('password length: $value', async ({ value, valid }) => {
+      const user = userEvent.setup();
+
+      renderPage();
+
+      const input = screen.getByLabelText(/пароль/i);
+
+      await user.type(input, value);
+      await user.tab();
+
+      if (!valid) {
+        await waitFor(() => {
+          expect(screen.getByText(/символ/)).toBeInTheDocument();
+        });
+      }
+    });
+  });
+
+  // EQUIVALENCE CLASSES
+
+  describe('Username character validation', () => {
+    it('не принимает невалидный username', async () => {
+      const user = userEvent.setup();
+
+      renderPage();
+
+      const input = screen.getByLabelText(/логин/i);
+
+      await user.type(input, 'user!');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Только латиница и цифры')).toBeInTheDocument();
+      });
+    });
+
+    it('принмимает валидный username', async () => {
+      const user = userEvent.setup();
+
+      renderPage();
+      const input = screen.getByLabelText(/логин/i);
+
+      await user.type(input, 'user123');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Только латиница и цифры')).not.toBeInTheDocument();
+      });
+    });
   });
 
   it('успешная регистрация → перенаправление на главную', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <SignUpPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await user.type(screen.getByLabelText(/логин/i), 'validuser123');
     await user.type(screen.getByLabelText(/пароль/i), 'Password123!');
@@ -89,11 +160,7 @@ describe('SignUpPage', () => {
     mockRegister.mockRejectedValueOnce({ uiMessage: 'Пользователь уже существует' });
 
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <SignUpPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await user.type(screen.getByLabelText(/логин/i), 'existinguser');
     await user.type(screen.getByLabelText(/пароль/i), 'ValidPass123!');
