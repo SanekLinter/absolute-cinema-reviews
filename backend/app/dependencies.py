@@ -26,7 +26,7 @@ def get_current_user(
         user_id: int = int(payload.get("sub"))
         if user_id is None:
             raise credentials_exception
-    except (JWTError, ValueError):
+    except (JWTError, ValueError, TypeError):
         raise credentials_exception
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -45,13 +45,16 @@ def get_current_admin(
 
 
 def get_current_user_optional(
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ) -> Optional[models.User]:
     if not authorization or not authorization.startswith("Bearer "):
         return None
     token = authorization[7:]
-
+    class Credentials:
+        def __init__(self, token: str):
+            self.credentials = token
     try:
-        return get_current_user(token)
+        return get_current_user(Credentials(token), db)
     except (HTTPException, AuthenticationError, UserNotFoundError):
         return None

@@ -34,7 +34,7 @@ class PaginationParams(BaseModel):
 
 
 class PublicPaginationParams(PaginationParams):
-    author_id: Optional[int] = None
+    author_id: Optional[int] = Field(None, ge=1)
 
 
 class PaginationInfo(BaseModel):
