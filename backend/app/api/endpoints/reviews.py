@@ -25,15 +25,6 @@ def get_public_reviews(
     return review_service.get_public_reviews(params, current_user)
 
 
-@router.get("/{review_id}", response_model=review_schemas.DetailReviewResponse)
-def get_review_detail(
-    review_id: int = Path(..., ge=1),
-    current_user: Optional[models.User] = Depends(get_current_user_optional),
-    review_service: ReviewService = Depends(get_review_service)
-):
-    return review_service.get_review_detail(review_id, current_user)
-
-
 @router.get("/my", response_model=review_schemas.PaginatedMyReviewsResponse)
 def get_my_reviews(
     params: review_schemas.PaginationParams = Depends(),
@@ -41,6 +32,24 @@ def get_my_reviews(
     review_service: ReviewService = Depends(get_review_service)
 ):
     return review_service.get_my_reviews(params, current_user)
+
+
+@router.get("/moderation", response_model=review_schemas.PaginatedReviewsResponse)
+def get_moderation_reviews(
+    params: review_schemas.PublicPaginationParams = Depends(),
+    current_user: models.User = Depends(get_current_admin),
+    review_service: ReviewService = Depends(get_review_service)
+):
+    return review_service.get_moderation_reviews(params)
+
+
+@router.get("/{review_id}", response_model=review_schemas.DetailReviewResponse)
+def get_review_detail(
+    review_id: int = Path(..., ge=1),
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    review_service: ReviewService = Depends(get_review_service)
+):
+    return review_service.get_review_detail(review_id, current_user)
 
 
 @router.post("/", response_model=review_schemas.ReviewCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -80,13 +89,6 @@ def toggle_like(
     return review_service.toggle_like(review_id, current_user)
 
 
-@router.get("/moderation", response_model=review_schemas.PaginatedReviewsResponse)
-def get_moderation_reviews(
-    params: review_schemas.PublicPaginationParams = Depends(),
-    current_user: models.User = Depends(get_current_admin),
-    review_service: ReviewService = Depends(get_review_service)
-):
-    return review_service.get_moderation_reviews(params)
 
 
 @router.post("/{review_id}/approve", status_code=status.HTTP_200_OK)

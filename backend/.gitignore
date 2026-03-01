@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .env
 .env.local
+.coverage
 
 # IDE
 .idea/
