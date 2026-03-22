@@ -1,3 +1,4 @@
+from datetime import timedelta
 import pytest
 import app.db.models as models
 
@@ -30,6 +31,63 @@ def login_and_get_token(client, username: str, password: str = "password123") ->
 
 def auth_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def test_register_user_and_get_me(client, monkeypatch):
+    def mocked_token_generator(data, expires_delta=None):
+        from app.utils.security import create_access_token as real_create_access_token
+
+        return real_create_access_token(data, expires_delta=timedelta(minutes=5))
+
+    monkeypatch.setattr(
+        "app.services.user_service.create_access_token",
+        mocked_token_generator,
+    )
+
+    token = register_and_get_token(client, "user1001")
+
+    me_res = client.get("/api/auth/me", headers=auth_headers(token))
+
+    assert me_res.status_code == 200
+    assert me_res.json()["username"] == "user1001"
+    assert me_res.json()["role"] == "user"
+
+
+def test_register_duplicate_username_returns_400(client):
+    first = client.post(
+        "/api/auth/register",
+        json={"username": "user1002", "password": "password123"},
+    )
+    second = client.post(
+        "/api/auth/register",
+        json={"username": "user1002", "password": "password123"},
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 400
+    assert second.json()["detail"] == "Username already exists"
+
+
+def test_login_success_and_get_me(client):
+    register_and_get_token(client, "user1003", "password123")
+
+    token = login_and_get_token(client, "user1003", "password123")
+    me_res = client.get("/api/auth/me", headers=auth_headers(token))
+
+    assert me_res.status_code == 200
+    assert me_res.json()["username"] == "user1003"
+
+
+def test_login_with_wrong_password_returns_401(client):
+    register_and_get_token(client, "user1004", "password123")
+
+    login_res = client.post(
+        "/api/auth/login",
+        json={"username": "user1004", "password": "wrongpass"},
+    )
+
+    assert login_res.status_code == 401
+    assert login_res.json()["detail"] == "Invalid credentials"
 
 
 def test_public_reviews_for_anonymous_only_shows_approved_with_is_liked_none(
