@@ -218,3 +218,152 @@ def test_non_admin_cannot_access_moderation(browser, frontend_base_url, api_clie
 
     wait_url_contains(browser, "/")
     assert "Рецензии на модерации" not in browser.page_source
+
+
+def test_user_can_like_approved_review(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    _, _, review_id = create_approved_review(api_client, admin_token, unique_username, default_password)
+    create_user_and_login(api_client, browser, frontend_base_url, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}")
+    like_button = wait_clickable(browser, By.XPATH, "//img[@alt='Не лайкнут']/parent::button")
+    like_button.click()
+
+    wait_visible(browser, By.XPATH, "//img[@alt='Лайкнут']")
+
+
+def test_user_can_unlike_review(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    _, _, review_id = create_approved_review(api_client, admin_token, unique_username, default_password)
+    create_user_and_login(api_client, browser, frontend_base_url, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}")
+    wait_clickable(browser, By.XPATH, "//img[@alt='Не лайкнут']/parent::button").click()
+    wait_visible(browser, By.XPATH, "//img[@alt='Лайкнут']")
+    wait_clickable(browser, By.XPATH, "//img[@alt='Лайкнут']/parent::button").click()
+    wait_visible(browser, By.XPATH, "//img[@alt='Не лайкнут']")
+
+
+def test_pending_review_not_visible_for_other_users(browser, frontend_base_url, api_client, unique_username, default_password):
+    _, _, review_id = create_pending_review(api_client, unique_username, default_password)
+    create_user_and_login(api_client, browser, frontend_base_url, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/")
+    wait_visible(browser, By.CSS_SELECTOR, "body")
+    assert f"/reviews/{review_id}" not in browser.page_source
+
+
+def test_author_can_edit_own_review_and_status_becomes_pending(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    username = unique_username("editor")
+    token = api_client.register(username, default_password)
+    review_id = api_client.create_review(
+        token,
+        title=f"Editable {username}",
+        movie_title="Matrix",
+        content=LONG_CONTENT,
+    )
+    api_client.approve_review(admin_token, review_id)
+
+    ui_login(browser, frontend_base_url, username, default_password)
+    wait_visible(browser, By.XPATH, "//button[contains(., 'Выйти')]")
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}")
+    wait_clickable(browser, By.XPATH, "//a[contains(., 'Редактировать')]").click()
+
+    fill_review_form(browser, f"Edited {username}", "Matrix Reloaded", LONG_CONTENT + " Дополнение.")
+    wait_clickable(browser, By.XPATH, "//button[contains(., 'Отправить на модерацию')]").click()
+
+    wait_url_to_be(browser, f"{frontend_base_url}/reviews/{review_id}")
+    wait_visible(browser, By.XPATH, "//*[contains(text(), 'pending')]")
+
+
+def test_user_cannot_edit_foreign_review(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    _, _, review_id = create_approved_review(api_client, admin_token, unique_username, default_password)
+
+    create_user_and_login(api_client, browser, frontend_base_url, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}/edit")
+    wait_visible(
+        browser,
+        By.XPATH,
+        "//*[contains(text(), 'У вас нет прав на редактирование этой рецензии')]",
+    )
+
+
+def test_author_can_delete_own_review(browser, frontend_base_url, api_client, unique_username, default_password):
+    username = unique_username("deleter")
+    token = api_client.register(username, default_password)
+    review_id = api_client.create_review(
+        token,
+        title=f"Delete me {username}",
+        movie_title="Avatar",
+        content=LONG_CONTENT,
+    )
+
+    ui_login(browser, frontend_base_url, username, default_password)
+    wait_visible(browser, By.XPATH, "//button[contains(., 'Выйти')]")
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}")
+    wait_clickable(browser, By.XPATH, "//button[contains(., 'Удалить')]").click()
+    wait_clickable(browser, By.XPATH, "//h3[contains(., 'Удаление рецензии')]/following::button[contains(., 'Удалить')][1]").click()
+
+    wait_url_to_be(browser, f"{frontend_base_url}/my-reviews")
+    assert f"/reviews/{review_id}" not in browser.page_source
+
+
+def test_user_cannot_delete_foreign_review_via_ui(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    _, _, review_id = create_approved_review(api_client, admin_token, unique_username, default_password)
+
+    create_user_and_login(api_client, browser, frontend_base_url, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/reviews/{review_id}")
+    wait_visible(browser, By.CSS_SELECTOR, "body")
+    assert "Удалить" not in browser.page_source
+
+
+def test_search_filters_reviews_by_title(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    match_author = unique_username("match")
+    match_token = api_client.register(match_author, default_password)
+    match_id = api_client.create_review(
+        match_token,
+        title=f"Уникальный поиск {match_author}",
+        movie_title="Search Match",
+        content=LONG_CONTENT,
+    )
+
+    non_match_author = unique_username("other")
+    non_match_token = api_client.register(non_match_author, default_password)
+    non_match_id = api_client.create_review(
+        non_match_token,
+        title=f"Обычный заголовок {non_match_author}",
+        movie_title="Search Other",
+        content=LONG_CONTENT,
+    )
+
+    api_client.approve_review(admin_token, match_id)
+    api_client.approve_review(admin_token, non_match_id)
+
+    browser.get(f"{frontend_base_url}/")
+    submit_search(browser, "Уникальный поиск")
+
+    wait_visible(browser, By.XPATH, "//*[contains(text(), 'Уникальный поиск')]")
+    assert "Обычный заголовок" not in browser.page_source
+
+
+def test_search_no_results_shows_empty_state(browser, frontend_base_url):
+    browser.get(f"{frontend_base_url}/")
+    submit_search(browser, "zzzzzzzzzzzzzzzz")
+
+    wait_visible(browser, By.XPATH, "//*[contains(text(), 'Рецензии не найдены')]")
+    assert "Рецензии не найдены" in browser.page_source
+
+
+def test_open_author_profile_from_feed(browser, frontend_base_url, api_client, admin_token, unique_username, default_password):
+    author_username, _, review_id = create_approved_review(api_client, admin_token, unique_username, default_password)
+
+    browser.get(f"{frontend_base_url}/")
+    wait_clickable(browser, By.XPATH, f"//a[contains(@href, '/users/') and contains(., '{author_username}')]").click()
+
+    wait_url_contains(browser, "/users/")
+    wait_visible(browser, By.XPATH, "//*[contains(text(), 'Рецензии пользователя')]")
+    wait_review_link(browser, review_id)
+    assert author_username in browser.page_source
+    assert f"/reviews/{review_id}" in browser.page_source
