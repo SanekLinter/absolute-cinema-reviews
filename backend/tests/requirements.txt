@@ -1,7 +1,7 @@
 pytest
 pytest-cov
 httpx
-
 pytest-asyncio
 requests
 pytest-mock
+selenium
